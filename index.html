@@ -1,0 +1,1618 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>POLIS · Schaduw van Hellas · Geschiedenis 2A</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800;900&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{--tq:#009BA8;--ltq:#61C2CB;--gr:#94C021;--lgr:#C3D984;--or:#EE7D22;--rd:#E61149;--ink:#1f2b33;--pap:#fbf5e6;--pap2:#f1e6c8;--line:#e0cfa4;--gold:#ffd24a}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#071214;overflow:hidden;font-family:'Nunito',system-ui,sans-serif;color:var(--ink)}
+#wrap{position:fixed;inset:0;display:grid;place-items:center}
+#game{position:relative;width:min(100vw,177.78vh);aspect-ratio:16/9;max-height:100vh;background:#000;overflow:hidden;container-type:inline-size}
+#cv{position:absolute;inset:0;width:100%;height:100%;image-rendering:auto}
+.kbd{display:inline-block;min-width:1.6em;padding:0 .4em;border-radius:5px;background:#fff;color:var(--ink);border:1px solid #bbb;border-bottom-width:3px;font-weight:800;font-size:.85em;text-align:center;line-height:1.5}
+/* HUD */
+#hud{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .4s}
+#hud.on{opacity:1}
+.bars{position:absolute;left:1.6cqw;top:1.6cqw;width:24cqw}
+.bar{height:1.5cqw;background:rgba(0,0,0,.55);border-radius:1cqw;overflow:hidden;border:2px solid rgba(255,255,255,.25)}
+#hpf{height:100%;width:100%;background:linear-gradient(90deg,#94C021,#C3D984);transition:width .2s}
+#hpf.low{background:linear-gradient(90deg,#E61149,#ff6b7f)}
+.bar.st{height:.7cqw;margin-top:.5cqw;border-width:1px}
+#stf{height:100%;width:100%;background:#61C2CB}
+#zone{color:#fff;font-family:'Cinzel',serif;font-weight:800;font-size:1.3cqw;margin-top:.6cqw;text-shadow:0 2px 3px #000;letter-spacing:.06em}
+#obj{position:absolute;left:50%;top:1.4cqw;transform:translateX(-50%);max-width:46cqw;background:rgba(10,25,28,.82);color:#fff;border-radius:1cqw;padding:.7cqw 1.4cqw;text-align:center;border:2px solid rgba(255,210,74,.6);font-size:1.45cqw}
+#obj .ol{font-size:.9cqw;letter-spacing:.12em;color:var(--gold);text-transform:uppercase;font-weight:800}
+#objt{font-weight:800}
+#objs{font-size:1.2cqw;opacity:.9}
+#obj.flash{animation:objf 1.2s}
+@keyframes objf{0%{transform:translateX(-50%) scale(1.15);border-color:#fff}100%{transform:translateX(-50%)}}
+.rt{position:absolute;right:1.4cqw;top:1.4cqw;display:flex;flex-direction:column;align-items:flex-end;gap:.6cqw;pointer-events:auto}
+#mm{width:18cqw;height:auto;border-radius:1cqw;border:2px solid rgba(255,255,255,.4);background:#0b1a1d;box-shadow:0 4px 12px rgba(0,0,0,.4)}
+.hrow{display:flex;gap:.5cqw;align-items:center}
+.hb{background:rgba(10,25,28,.82);color:#fff;border:2px solid rgba(255,255,255,.25);border-radius:2cqw;padding:.4cqw .9cqw;font:inherit;font-weight:800;font-size:1.2cqw;cursor:pointer;display:inline-flex;align-items:center;gap:.4cqw}
+.hb:hover{border-color:var(--gold)}
+.hb svg{width:1.5cqw;height:1.5cqw}
+#drbox{position:relative}
+#drbox.pop{animation:pop .35s}
+@keyframes pop{50%{transform:scale(1.15)}}
+.float{position:absolute;right:-.5cqw;top:-1cqw;font-weight:800;animation:up 1.1s forwards}.float.plus{color:var(--lgr)}.float.min{color:#ff8fa8}
+@keyframes up{to{transform:translateY(-2cqw);opacity:0}}
+#prompt{position:absolute;left:50%;bottom:4cqw;transform:translateX(-50%) translateY(10px);background:rgba(10,25,28,.85);color:#fff;padding:.6cqw 1.2cqw;border-radius:1cqw;font-weight:800;font-size:1.4cqw;opacity:0;transition:.2s}
+#prompt.on{opacity:1;transform:translateX(-50%)}
+#hidden{position:absolute;left:1.6cqw;top:7cqw;background:rgba(31,58,64,.9);color:var(--ltq);padding:.3cqw .9cqw;border-radius:1cqw;font-weight:800;font-size:1.1cqw;opacity:0;transition:.2s}
+#hidden.on{opacity:1}
+#toasts{position:absolute;left:50%;top:9cqw;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:.5cqw;pointer-events:none;z-index:40}
+.toast{background:rgba(10,25,28,.9);color:#fff;padding:.6cqw 1.3cqw;border-radius:1cqw;font-size:1.3cqw;display:flex;align-items:center;gap:.5cqw;border-left:4px solid var(--gold);transition:opacity .5s;animation:tin .3s}
+.toast.out{opacity:0}
+@keyframes tin{from{transform:translateY(-8px);opacity:0}}
+.toast svg{width:1.5cqw;height:1.5cqw}
+/* dialoog */
+#dlg{position:absolute;left:50%;bottom:2cqw;transform:translateX(-50%) translateY(150%);opacity:0;pointer-events:none;width:min(76cqw,920px);background:var(--pap);border:3px solid var(--line);border-radius:1.4cqw;padding:1.2cqw 1.4cqw;display:flex;gap:1.2cqw;align-items:flex-start;box-shadow:0 10px 30px rgba(0,0,0,.5);transition:transform .25s;z-index:30;flex-wrap:wrap}
+#dlg.open{transform:translateX(-50%);opacity:1;pointer-events:auto}
+#dlg .pt{width:7cqw;height:7cqw;border-radius:50%;border:3px solid var(--tq);flex:none;background:#fff}
+#dlg .dt{flex:1;min-width:30cqw}
+#dlg .dn{font-family:'Cinzel',serif;font-weight:800;color:var(--tq);font-size:1.5cqw}
+#dlg .dx{font-size:1.55cqw;line-height:1.45}
+#dlg .dnext{align-self:flex-end}
+#dlg .dq{width:100%;font-weight:800;font-size:1.6cqw}
+#dlg .dch{display:grid;gap:.6cqw;width:100%}
+/* knoppen */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5em;padding:.6em 1.1em;border:0;border-radius:.7em;background:var(--tq);color:#fff;font:inherit;font-weight:800;font-size:clamp(13px,1.35cqw,17px);cursor:pointer;box-shadow:0 4px 0 #00717b;text-align:left}
+.btn:hover{filter:brightness(1.08)}.btn:active{transform:translateY(2px);box-shadow:0 1px 0 #00717b}
+.btn.v{background:var(--or);box-shadow:0 4px 0 #b55a12}
+.btn.alt{background:#fff;color:var(--tq);border:2px solid var(--ltq);box-shadow:0 4px 0 #cbbf9b}
+.btn .kbd{font-size:.75em}
+.sp{display:inline-block;border-radius:6px;padding:1px 7px;font-size:.78em;font-weight:800;color:#fff;vertical-align:middle}
+.sp-b{background:var(--tq)}.sp-r{background:var(--gr)}.sp-v{background:var(--or)}.sp-o{background:#7a5aa8}
+/* vragen */
+.ov{position:absolute;inset:0;background:rgba(5,15,18,.72);display:none;align-items:center;justify-content:center;z-index:35;padding:2cqw}
+.ov.open{display:flex}
+.qcard{background:var(--pap);border:3px solid var(--line);border-radius:1.4cqw;max-width:min(70cqw,840px);width:100%;max-height:92%;overflow:auto;padding:1.6cqw 2cqw;font-size:clamp(13px,1.45cqw,18px);box-shadow:0 14px 40px rgba(0,0,0,.6);animation:qin .3s}
+@keyframes qin{from{transform:scale(.95);opacity:0}}
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:1em;margin-bottom:.6em;flex-wrap:wrap}
+.qpage{display:inline-flex;align-items:center;gap:.3em;background:var(--lgr);border-radius:.5em;padding:.1em .6em;font-weight:800;font-size:.85em}
+.qq{font-weight:800;font-size:1.12em;margin:.4em 0 .7em;line-height:1.45}
+.opts{display:grid;gap:.5em}
+.opt{display:flex;align-items:center;gap:.8em;text-align:left;padding:.65em .9em;border-radius:.8em;border:2px solid #dccb9f;background:#fff;font:inherit;cursor:pointer;color:var(--ink)}
+.opt:hover:not(:disabled){border-color:var(--tq)}
+.opt .let{flex:none;width:1.8em;height:1.8em;border-radius:50%;display:grid;place-items:center;background:var(--pap2);font-weight:800;color:#8a6b3c}
+.opt.good{background:#eef7dc;border-color:var(--gr)}.opt.good .let{background:var(--gr);color:#fff}
+.opt.wrong{background:#fde6ec;border-color:var(--rd);animation:shk .35s}.opt.wrong .let{background:var(--rd);color:#fff}
+@keyframes shk{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.qrow{display:flex;gap:.6em;align-items:center;flex-wrap:wrap;margin-top:.8em}
+.hint{display:inline-flex;align-items:center;gap:.4em;background:transparent;border:2px dashed var(--gr);color:#5f7d12;border-radius:.7em;padding:.45em .8em;font:inherit;font-weight:800;cursor:pointer}
+.hint .cost{background:var(--lgr);border-radius:.5em;padding:0 .4em;font-size:.85em}
+.hintbox{background:#f3f8e6;border-left:5px solid var(--gr);border-radius:.6em;padding:.6em .8em;width:100%}
+.lwb{display:flex;align-items:center;gap:.4em;margin-top:.4em;font-size:.92em;color:#3c5a0a}
+.fb{margin-top:.8em;border-radius:.8em;padding:.7em .9em;line-height:1.5}.fb:empty{display:none}
+.fb.ok{background:#eef7dc;border-left:6px solid var(--gr)}.fb.no{background:#fdecef;border-left:6px solid var(--rd)}.fb .lwb{color:#7a1a32}
+#qnext{margin-top:.8em}
+.small{font-size:.88em;opacity:.85}
+.slist{list-style:none;padding:0;margin:.4em 0;display:grid;gap:.45em}
+.sitem{display:flex;align-items:center;gap:.7em;background:#fff;border:2px solid #dccb9f;border-radius:.8em;padding:.45em .7em}
+.sitem.good{border-color:var(--gr);background:#f3f9e6}.sitem.wrong{border-color:var(--rd);background:#fdf0f3}
+.sitem .num{flex:none;width:1.8em;height:1.8em;border-radius:50%;background:var(--tq);color:#fff;display:grid;place-items:center;font-weight:800}
+.sitem .stxt{flex:1;font-weight:700}
+.arrows{display:flex;flex-direction:column;gap:2px}
+.ar{border:0;background:var(--pap2);border-radius:.5em;width:2.2em;height:1.7em;cursor:pointer;display:grid;place-items:center;color:var(--ink)}
+.ar:hover:not(:disabled){background:var(--ltq);color:#fff}.ar:disabled{opacity:.3}
+.cats{display:grid;gap:.45em}
+.crow{display:flex;align-items:center;gap:.6em;flex-wrap:wrap;background:#fff;border:2px solid #dccb9f;border-radius:.8em;padding:.45em .7em}
+.crow.good{border-color:var(--gr);background:#f3f9e6}.crow.wrong{border-color:var(--rd);background:#fdf0f3}
+.ctxt{flex:1;min-width:14em;font-weight:700}
+.cbtns{display:flex;gap:.3em;flex-wrap:wrap}
+.cb{border:2px solid var(--c);color:var(--c);background:#fff;border-radius:.6em;padding:.25em .6em;font:inherit;font-size:.88em;font-weight:800;cursor:pointer}
+.cb.sel{background:var(--c);color:#fff}
+textarea{width:100%;font:inherit;border:2px solid #dccb9f;border-radius:.8em;padding:.7em;background:#fff;resize:vertical}
+.bron{margin:.3em 0 .6em;background:#fff;border:2px solid var(--line);border-radius:.8em;padding:.5em;display:inline-block;max-width:100%}
+.bron .bimg{width:min(300px,100%);aspect-ratio:4/3;overflow:hidden;border-radius:.5em;background:var(--pap2);display:grid;place-items:center}
+.bron .bimg img,.bron .bimg svg{width:100%;height:100%;object-fit:cover}
+.bron figcaption{font-size:.78em;color:#6a5a3a;margin-top:.4em;max-width:300px;line-height:1.35}
+/* filmscène */
+#cut{position:absolute;inset:0;background:radial-gradient(circle at 50% 40%,#16343a,#050c0e 75%);display:none;align-items:center;justify-content:center;z-index:45;padding:3cqw;color:#fff}
+#cut.open{display:flex}
+.cutin{max-width:62cqw;text-align:center;animation:cin .6s}
+.cutin.dark{text-shadow:0 0 20px rgba(230,17,73,.4)}
+@keyframes cin{from{opacity:0;filter:blur(6px)}}
+.glline{height:2px;width:30cqw;margin:0 auto 1.4cqw;background:linear-gradient(90deg,transparent,var(--ltq),transparent);animation:gl 2s infinite}
+@keyframes gl{50%{opacity:.3;transform:scaleX(.6)}}
+.ckop{font-size:1.1cqw;letter-spacing:.3em;text-transform:uppercase;color:var(--ltq);font-weight:800}
+.cjaar{font-family:'Cinzel',serif;font-size:5cqw;font-weight:900;color:var(--gold);line-height:1.1;text-shadow:0 0 30px rgba(255,210,74,.35)}
+.cplaats{font-size:1.4cqw;color:#cfe;letter-spacing:.06em}
+#cut h2{font-family:'Cinzel',serif;font-size:2.6cqw;margin:.6cqw 0 1cqw}
+.cp{font-size:1.55cqw;line-height:1.6;color:#e9f1f1;margin-bottom:1.4cqw}
+.cp .kbd{color:var(--ink)}
+#cut .bron{color:var(--ink)}
+/* panelen */
+.panel{background:var(--pap);border:3px solid var(--line);border-radius:1.4cqw;max-width:min(76cqw,900px);width:100%;max-height:92%;overflow:auto;padding:1.8cqw 2.2cqw;font-size:clamp(13px,1.4cqw,17px);position:relative}
+.logo2{font-family:'Cinzel',serif;font-weight:900;font-size:clamp(40px,6.5cqw,90px);color:var(--tq);letter-spacing:.12em;line-height:1;text-shadow:3px 3px 0 #e9dcbc}
+.sub2{font-family:'Cinzel',serif;font-weight:800;color:var(--rd);font-size:clamp(16px,2cqw,26px);margin-bottom:.6em;letter-spacing:.1em}
+.sporen{display:flex;gap:.4em;align-items:center;flex-wrap:wrap;background:#fff;border-radius:.8em;padding:.5em .7em;font-size:.92em}
+.form{display:grid;grid-template-columns:2fr 1fr;gap:.7em;margin-top:.8em}
+.form label{display:flex;flex-direction:column;font-weight:800;font-size:.9em;gap:.2em}
+.form input,.form select{font:inherit;padding:.55em .7em;border:2px solid #dccb9f;border-radius:.6em;background:#fff}
+#start{background:radial-gradient(circle at 30% 20%,#1b4a50,#050c0e 80%);display:none}
+#start.open{display:flex}
+.rank{text-align:center;background:#fff;border-radius:1em;padding:.8em;margin:.8em 0;border:3px solid var(--tq)}
+.rk{font-family:'Cinzel',serif;font-size:1.8em;font-weight:900;color:var(--tq)}
+.rem{background:#fdecef;border-left:6px solid var(--rd);border-radius:.8em;padding:.6em .9em}.rem.good{background:#eef7dc;border-color:var(--gr)}
+.rem ul{margin:.3em 0 0 1.1em;padding:0}
+.boek{display:inline-flex;align-items:center;gap:.3em;background:var(--lgr);border-radius:.5em;padding:0 .5em;font-size:.85em;font-weight:700}
+.inlever{margin-top:.8em;background:#e7f6f7;border-left:6px solid var(--tq);border-radius:.8em;padding:.6em .9em}
+.inlever ol{margin:.3em 0 0 1.1em;padding:0}
+#end .panel h1{font-family:'Cinzel',serif;color:var(--tq);margin:.1em 0}
+.tabs{display:flex;gap:.4em;margin-bottom:.8em}
+.tab{border:2px solid var(--ltq);background:#fff;color:var(--tq);border-radius:.6em;padding:.3em .9em;font:inherit;font-weight:800;cursor:pointer}.tab.on{background:var(--tq);color:#fff}
+.acts{padding-left:1.2em}.acts li{margin:.2em 0;opacity:.6}.acts li.done{opacity:1;color:#4a6a10}.acts li.now{opacity:1;font-weight:800}
+.bookgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:.8em}
+.bnr{font-weight:800;color:var(--tq)}
+.ctl td{padding:.3em .6em;vertical-align:top}
+#jClose{position:absolute;right:1em;top:1em}
+#desync .panel{text-align:center;background:#1a0a10;color:#fff;border-color:var(--rd)}
+#desync h2{font-family:'Cinzel',serif;color:var(--rd);font-size:2.4em;margin:.2em 0}
+.conf{position:fixed;top:-12px;width:9px;height:14px;border-radius:2px;z-index:90;animation:fall 2.8s ease-in forwards;pointer-events:none}
+@keyframes fall{to{top:105vh;transform:rotate(720deg)}}
+/* aanraakbediening */
+#touch{display:none;position:absolute;inset:0;pointer-events:none;z-index:20}
+body.touchmode #touch{display:block}
+#tpad{position:absolute;left:3cqw;bottom:3cqw;width:16cqw;height:16cqw;border-radius:50%;background:rgba(255,255,255,.12);border:2px solid rgba(255,255,255,.3);pointer-events:auto;touch-action:none}
+#tknob{position:absolute;left:50%;top:50%;width:7cqw;height:7cqw;margin:-3.5cqw;border-radius:50%;background:rgba(255,255,255,.4)}
+.tb{position:absolute;width:9cqw;height:9cqw;border-radius:50%;background:rgba(10,25,28,.6);border:2px solid rgba(255,255,255,.4);color:#fff;font-weight:800;font-size:1.6cqw;pointer-events:auto;touch-action:none;display:grid;place-items:center;font-family:inherit}
+#tatk{right:4cqw;bottom:4cqw;background:rgba(230,17,73,.55)}#tuse{right:14cqw;bottom:9cqw;background:rgba(0,155,168,.6)}#trun{right:4cqw;bottom:15cqw;width:7cqw;height:7cqw}
+@media print{#game{display:none}}
+</style>
+</head>
+<body>
+<!--
+  POLIS: Schaduw van Hellas · Geschiedenis 2A · Middenschool Heilig Hart Bree
+  Leerstof: leerwerkboek trimester 1, Les 4 en Les 5 (p. 29-39)
+  Aanpassen? Zoek naar "CONFIG" (mailadres) en "VERHAAL, MISSIES EN VRAGEN" (teksten en vragen).
+  Bronfoto's laden van Wikimedia Commons; lukt dat niet, dan toont het spel automatisch een eigen tekening.
+-->
+<div id="wrap"><div id="game">
+  <canvas id="cv"></canvas>
+  <div id="hud">
+    <div class="bars"><div class="bar"><div id="hpf"></div></div><div class="bar st"><div id="stf"></div></div><div id="zone"></div></div>
+    <div id="hidden">Verstopt</div>
+    <div id="obj"><div class="ol">Missie</div><div id="objt"></div><div id="objs"></div></div>
+    <div class="rt"><canvas id="mm" width="200" height="140"></canvas>
+      <div class="hrow"><span class="hb" id="drbox"><span id="drico"></span><span id="dr">0</span></span><button class="hb" id="jBtn">Dagboek <span class="kbd">Tab</span></button><button class="hb" id="sBtn" aria-label="geluid"></button><button class="hb" id="mBtn">Menu</button></div></div>
+    <div id="prompt"></div>
+  </div>
+  <div id="toasts"></div>
+  <div id="touch"><div id="tpad"><div id="tknob"></div></div><button class="tb" id="tatk">Speer</button><button class="tb" id="tuse">E</button><button class="tb" id="trun">Ren</button></div>
+  <div id="dlg"></div>
+  <div class="ov" id="quiz"><div class="qcard"></div></div>
+  <div id="cut"></div>
+  <div class="ov" id="journal"><div class="panel"><button class="btn alt" id="jClose">Sluiten</button><div class="jbody"></div></div></div>
+  <div class="ov" id="desync"><div class="panel"><h2>Desynchronisatie</h2><p>Je bent gevallen. De herinnering is verstoord.<br>Glaux brengt je terug naar het begin van deze missie (-10 drachmen).</p><button class="btn" id="desyncBtn">Probeer opnieuw</button></div></div>
+  <div class="ov" id="end"><div class="panel ebody"></div></div>
+  <div class="ov" id="start"><div class="panel sbody"></div></div>
+</div></div>
+<script>
+/* ===================== CONFIG ===================== */
+const CONFIG = { mail: 'robin.vanhove@hhartbree.be', leerkracht: 'meneer Vanhove' };
+/* ================== KERN: canvas, invoer, wiskunde, geluid ================== */
+const VW = 960, VH = 540, T = 32;
+let ZOOM = 1.65, zoomTarget = 1.65;
+const cv = document.getElementById('cv'), cx = cv.getContext('2d');
+cv.width = VW; cv.height = VH;
+
+const keys = {}, pressed = {};
+addEventListener('keydown', e => {
+  if (document.activeElement && ['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)) return;
+  if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)) e.preventDefault();
+  if (!keys[e.code]) pressed[e.code] = true; keys[e.code] = true;
+});
+addEventListener('keyup', e => { keys[e.code] = false; });
+addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
+const tp = (...c) => c.some(k => pressed[k]);
+const kd = (...c) => c.some(k => keys[k]);
+
+/* aanraakbediening (Chromebook met touchscreen, tablet) */
+const touch = { on:false, id:null, ox:0, oy:0, x:0, y:0, atk:false, use:false, run:false };
+function initTouch(){
+  const pad = document.getElementById('tpad'), knob = document.getElementById('tknob');
+  const start = e => { const t = e.changedTouches[0]; touch.on = true; touch.id = t.identifier; const r = pad.getBoundingClientRect(); touch.ox = r.left + r.width/2; touch.oy = r.top + r.height/2; mv(e); e.preventDefault(); };
+  const mv = e => { for (const t of e.changedTouches) if (t.identifier === touch.id) { let dx = t.clientX - touch.ox, dy = t.clientY - touch.oy; const d = Math.hypot(dx,dy), m = 46; if (d > m){ dx = dx/d*m; dy = dy/d*m; } touch.x = dx/m; touch.y = dy/m; knob.style.transform = `translate(${dx}px,${dy}px)`; } e.preventDefault(); };
+  const end = e => { for (const t of e.changedTouches) if (t.identifier === touch.id) { touch.on = false; touch.x = touch.y = 0; knob.style.transform = ''; } };
+  pad.addEventListener('touchstart', start, {passive:false}); pad.addEventListener('touchmove', mv, {passive:false}); pad.addEventListener('touchend', end); pad.addEventListener('touchcancel', end);
+  const btn = (id, f) => { const b = document.getElementById(id); b.addEventListener('touchstart', e => { f(true); e.preventDefault(); }, {passive:false}); b.addEventListener('touchend', () => f(false)); b.addEventListener('mousedown', () => f(true)); b.addEventListener('mouseup', () => f(false)); };
+  btn('tatk', v => { if (v) pressed.Space = true; touch.atk = v; });
+  btn('tuse', v => { if (v) pressed.KeyE = true; });
+  btn('trun', v => { touch.run = v; });
+  addEventListener('touchstart', () => document.body.classList.add('touchmode'), {once:true});
+}
+function inp(){
+  let mx = 0, my = 0;
+  if (kd('KeyA','ArrowLeft')) mx -= 1; if (kd('KeyD','ArrowRight')) mx += 1;
+  if (kd('KeyW','ArrowUp')) my -= 1; if (kd('KeyS','ArrowDown')) my += 1;
+  if (touch.on){ mx = touch.x; my = touch.y; }
+  const l = Math.hypot(mx,my); if (l > 1){ mx /= l; my /= l; }
+  return { mx, my, run: kd('ShiftLeft','ShiftRight') || touch.run, atk: tp('Space','KeyJ'), use: tp('KeyE') };
+}
+
+/* wiskunde */
+const clamp = (v,a,b) => v < a ? a : v > b ? b : v;
+const lerp = (a,b,t) => a + (b-a)*t;
+const dist = (a,b) => Math.hypot(a.x-b.x, a.y-b.y);
+const rnd = (a=1,b) => b === undefined ? Math.random()*a : a + Math.random()*(b-a);
+const pick = a => a[Math.floor(Math.random()*a.length)];
+function seeded(s){ return () => (s = (s*16807) % 2147483647) / 2147483647; }
+function angDiff(a,b){ let d = b - a; while (d > Math.PI) d -= 2*Math.PI; while (d < -Math.PI) d += 2*Math.PI; return d; }
+
+/* geluid (WebAudio, zonder bestanden) */
+let AC = null, muted = false, noiseBuf = null;
+function ac(){ if (!AC){ try { AC = new (window.AudioContext||window.webkitAudioContext)(); const n = AC.sampleRate*0.5; noiseBuf = AC.createBuffer(1, n, AC.sampleRate); const d = noiseBuf.getChannelData(0); for (let i=0;i<n;i++) d[i] = Math.random()*2-1; } catch(e){} } return AC; }
+function tone(f, d, type='sine', vol=.08, t0=0, slide=0){ if (muted || !ac()) return; const t = AC.currentTime + t0, o = AC.createOscillator(), g = AC.createGain(); o.type = type; o.frequency.setValueAtTime(f, t); if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, f+slide), t+d); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t+d); o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t+d+.02); }
+function noise(d, vol=.12, freq=1200, t0=0, q=1){ if (muted || !ac()) return; const t = AC.currentTime + t0, s = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain(); s.buffer = noiseBuf; f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = q; g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t+d); s.connect(f); f.connect(g); g.connect(AC.destination); s.start(t); s.stop(t+d+.02); }
+const SFX = {
+  swing: () => noise(.12, .07, 2500, 0, .8),
+  clang: () => { tone(1800, .12, 'square', .03); tone(2600, .18, 'triangle', .03); noise(.08, .08, 4000, 0, 2); },
+  hit:   () => { noise(.15, .14, 500, 0, 1); tone(140, .15, 'sine', .1, 0, -60); },
+  hurt:  () => { tone(220, .25, 'sawtooth', .06, 0, -120); noise(.2, .1, 300); },
+  coin:  () => { tone(1250, .08, 'triangle', .06); tone(1650, .14, 'triangle', .06, .07); },
+  good:  () => { tone(660, .15, 'sine', .08); tone(880, .22, 'sine', .08, .12); },
+  bad:   () => tone(170, .28, 'square', .045),
+  alert: () => { tone(900, .1, 'square', .05); tone(1300, .14, 'square', .05, .1); },
+  quest: () => [523,659,784,1046].forEach((f,i) => tone(f, .35, 'triangle', .07, i*.12)),
+  crash: () => { noise(.6, .25, 300, 0, .6); tone(80, .5, 'sine', .14, 0, -40); },
+  fire:  () => noise(.4, .03, 900, 0, .3),
+  drum:  (t0=0) => { tone(70, .3, 'sine', .16, t0, -30); noise(.08, .05, 200, t0); },
+  horn:  () => { tone(196, 1.2, 'sawtooth', .035); tone(294, 1.2, 'sawtooth', .02, .05); },
+  step:  () => noise(.04, .015, 700, 0, .5)
+};
+let drumT = 0;
+function battleDrums(dt, on){ if (!on) return; drumT -= dt; if (drumT <= 0){ drumT = 1.1; SFX.drum(); SFX.drum(.28); SFX.drum(.55); } }
+
+/* ================== TEKENWERK: tegels, gebouwen, personages, schepen ================== */
+/* tegeltypes */
+const TL = { G:0, D:1, P:2, W:3, R:4, S:5, F:6, M:7, H:8, K:9, L:10, X:11, Y:12 };
+/* G gras, D zandweg, P plaveisel, W water, R rots (klif), S zand, F akker, M marmer, H heuvel, K moeras, L muur, X verbrande grond, Y donker gras */
+const SOLID_T = new Set([TL.W, TL.R, TL.L]);
+
+const PAL = {
+  attika:   { G:'#b9b67a', Y:'#a3a86a', D:'#d2b98a', P:'#d9d0bf', S:'#e4d3a6', F:'#c9b35d', M:'#ece6d8', H:'#bba585', R:'#968770', K:'#7f9161', X:'#5b4b3d', W:'#1d8d9c' },
+  sparta:   { G:'#90ad5e', Y:'#7d9c52', D:'#c9b083', P:'#cfc5b2', S:'#d9c99e', F:'#b9a64f', M:'#e6e0d2', H:'#a7a17a', R:'#857a6a', K:'#6e8a55', X:'#5b4b3d', W:'#2b8fa2' },
+  plain:    { G:'#a7b26a', Y:'#93a05e', D:'#cdb385', P:'#d3cab6', S:'#e2d1a3', F:'#c5ae58', M:'#e7e0d1', H:'#b19d7e', R:'#8f806b', K:'#6f8a62', X:'#55463a', W:'#1f88a0' },
+  pass:     { G:'#9fa46e', Y:'#8a925f', D:'#c2aa80', P:'#cfc5b2', S:'#d8c79c', F:'#b9a64f', M:'#e6e0d2', H:'#a59276', R:'#7e7060', K:'#6e8a55', X:'#4e4036', W:'#1a7d92' },
+  grey:     { G:'#98a06e', Y:'#868f62', D:'#b9a582', P:'#c8bfae', S:'#d3c49e', F:'#a99a5a', M:'#e0dbd0', H:'#a19480', R:'#7a6e62', K:'#69805c', X:'#4e4036', W:'#2a7a8c' },
+  sea:      { G:'#a9b06e', Y:'#94a062', D:'#cdb385', P:'#d3cab6', S:'#e6d6a8', F:'#c5ae58', M:'#e7e0d1', H:'#b8a586', R:'#8f806b', K:'#6f8a62', X:'#55463a', W:'#1b7f97' }
+};
+const shade = (hex, f) => { const n = parseInt(hex.slice(1),16); let r=n>>16, g=n>>8&255, b=n&255; r=clamp(Math.round(r*f),0,255); g=clamp(Math.round(g*f),0,255); b=clamp(Math.round(b*f),0,255); return '#'+((1<<24)|(r<<16)|(g<<8)|b).toString(16).slice(1); };
+
+function drawTiles(g, z){
+  const P = PAL[z.pal], R = seeded(z.seed||7), keyOf = {}; for (const k in TL) keyOf[TL[k]] = k;
+  for (let y=0; y<z.h; y++) for (let x=0; x<z.w; x++){
+    const t = z.t[y*z.w+x], k = keyOf[t], c = P[k] || '#f0f', px = x*T, py = y*T, v = .94 + R()*.12;
+    if (t === TL.L){ g.fillStyle = P.D; g.fillRect(px,py,T,T); continue; }
+    g.fillStyle = shade(c, v); g.fillRect(px, py, T, T);
+    if (t === TL.G || t === TL.Y || t === TL.K){ for (let i=0;i<5;i++){ g.fillStyle = shade(c, .8 + R()*.12); const a = px+R()*T, b = py+R()*T; g.fillRect(a, b, 2, 4); g.fillRect(a+2, b+1, 2, 3); } if (R() < .05){ g.fillStyle = pick(['#e6d36a','#e2e2e2','#d97a6a']); g.fillRect(px+R()*28, py+R()*28, 3, 3); } }
+    else if (t === TL.D || t === TL.S){ for (let i=0;i<4;i++){ g.fillStyle = shade(c, .84 + R()*.1); g.beginPath(); g.arc(px+R()*T, py+R()*T, 1+R()*1.6, 0, 7); g.fill(); } }
+    else if (t === TL.P || t === TL.M){ g.strokeStyle = shade(c, .86); g.lineWidth = 1; g.strokeRect(px+.5, py+.5, T/2, T/2); g.strokeRect(px+T/2+.5, py+T/2+.5, T/2-1, T/2-1); }
+    else if (t === TL.F){ g.strokeStyle = shade(c, .78); g.lineWidth = 2; for (let i=4;i<T;i+=8){ g.beginPath(); g.moveTo(px, py+i); g.lineTo(px+T, py+i); g.stroke(); } }
+    else if (t === TL.H){ for (let i=0;i<3;i++){ g.fillStyle = shade(c, .82 + R()*.1); g.fillRect(px+R()*T, py+R()*T, 3+R()*4, 2+R()*3); } }
+    else if (t === TL.X){ for (let i=0;i<5;i++){ g.fillStyle = R()<.5 ? '#3a2f28' : '#6b5a4a'; g.fillRect(px+R()*T, py+R()*T, 3, 3); } }
+    else if (t === TL.W){ g.fillStyle = shade(c, .9 + R()*.1); g.fillRect(px, py, T, T); }
+  }
+  /* rotsen en kliffen met diepte */
+  for (let y=0; y<z.h; y++) for (let x=0; x<z.w; x++){
+    const t = z.t[y*z.w+x], px = x*T, py = y*T;
+    if (t === TL.R){
+      g.fillStyle = shade(P.R, .9 + R()*.15); g.fillRect(px, py, T, T);
+      for (let i=0;i<3;i++){ g.fillStyle = shade(P.R, 1.15); g.beginPath(); const a = px+R()*T, b = py+R()*T; g.moveTo(a, b); g.lineTo(a+6+R()*6, b+2); g.lineTo(a+3, b+6+R()*5); g.fill(); }
+      const below = y+1 < z.h ? z.t[(y+1)*z.w+x] : TL.R;
+      if (below !== TL.R){ g.fillStyle = shade(P.R, .62); g.fillRect(px, py+T-9, T, 9); g.fillStyle = 'rgba(0,0,0,.18)'; g.fillRect(px, py+T, T, 6); }
+    }
+    if (t === TL.W){
+      const n = [[0,-1],[1,0],[0,1],[-1,0]];
+      n.forEach(([dx,dy]) => { const xx = x+dx, yy = y+dy; if (xx<0||yy<0||xx>=z.w||yy>=z.h) return; const o = z.t[yy*z.w+xx]; if (o !== TL.W){ g.fillStyle = 'rgba(255,255,255,.35)'; if (dy===-1) g.fillRect(px, py, T, 3); if (dy===1) g.fillRect(px, py+T-3, T, 3); if (dx===-1) g.fillRect(px, py, 3, T); if (dx===1) g.fillRect(px+T-3, py, 3, T); } });
+    }
+    if (t === TL.L){
+      g.fillStyle = '#b9ab90'; g.fillRect(px, py, T, T); g.fillStyle = '#cfc2a6'; g.fillRect(px, py, T, T-8);
+      g.strokeStyle = '#a3957a'; g.lineWidth = 1; for (let i=0;i<T;i+=8){ g.beginPath(); g.moveTo(px, py+i+.5); g.lineTo(px+T, py+i+.5); g.stroke(); }
+      g.fillStyle = 'rgba(0,0,0,.18)'; g.fillRect(px, py+T, T, 5);
+    }
+  }
+}
+
+/* ---------- objecten (worden vooraf in de achtergrond getekend) ---------- */
+function shadowRect(g, x, y, w, h, o=7){ g.fillStyle = 'rgba(0,0,0,.22)'; g.fillRect(x+o, y+o, w, h); }
+const DRAW = {
+  house(g, o){ const {x,y,w,h} = o, roof = o.roof || '#c0603a'; shadowRect(g, x, y, w, h, 8);
+    g.fillStyle = '#efe6d2'; g.fillRect(x, y, w, h);
+    if (o.court){ const cw = w*.42, ch = h*.42, ix = x+(w-cw)/2, iy = y+(h-ch)/2; roofRect(g, x, y, w, h, roof); g.fillStyle = PAL[o.pal||'attika'].P; g.fillRect(ix, iy, cw, ch); g.fillStyle = 'rgba(0,0,0,.18)'; g.fillRect(ix, iy, cw, 5); }
+    else roofRect(g, x, y, w, h, roof);
+    if (o.burnt){ g.fillStyle = 'rgba(30,20,15,.55)'; g.fillRect(x, y, w, h); }
+  },
+  stoa(g, o){ const {x,y,w,h} = o; shadowRect(g, x, y, w, h, 8); roofRect(g, x, y, w, h-14, o.roof || '#b85a36'); g.fillStyle = '#e9e2d1'; g.fillRect(x, y+h-14, w, 14);
+    for (let i=x+10; i<x+w-4; i+=20){ g.fillStyle = '#fbf8f0'; g.beginPath(); g.arc(i, y+h-6, 5, 0, 7); g.fill(); g.strokeStyle = '#cfc6b1'; g.stroke(); } },
+  temple(g, o){ const {x,y,w,h} = o, v = o.v || 'whole';
+    shadowRect(g, x, y, w, h, 10); g.fillStyle = '#d6cfbf'; g.fillRect(x-8, y-8, w+16, h+16); g.fillStyle = '#e4ddcc'; g.fillRect(x-4, y-4, w+8, h+8); g.fillStyle = '#efe9db'; g.fillRect(x, y, w, h);
+    if (v === 'whole' || v === 'painted' || v === 'scaffold'){
+      const half = v === 'scaffold' ? .55 : 1;
+      g.fillStyle = '#ddd5c3'; g.fillRect(x+6, y+6, (w-12)*half, (h-12)/2); g.fillStyle = '#c9c0ac'; g.fillRect(x+6, y+h/2, (w-12)*half, (h-12)/2);
+      g.strokeStyle = '#b8af99'; g.lineWidth = 2; g.beginPath(); g.moveTo(x+6, y+h/2); g.lineTo(x+6+(w-12)*half, y+h/2); g.stroke();
+      if (v === 'painted'){ g.strokeStyle = '#c8372d'; g.lineWidth = 5; g.strokeRect(x+3, y+3, w-6, h-6); g.strokeStyle = '#2f5f9e'; g.lineWidth = 2; g.strokeRect(x+8, y+8, w-16, h-16); }
+      if (v === 'scaffold'){ g.strokeStyle = '#8a6440'; g.lineWidth = 3; for (let i=x+(w-12)*half; i<x+w; i+=14){ g.beginPath(); g.moveTo(i, y); g.lineTo(i, y+h); g.stroke(); } for (let j=y; j<y+h; j+=14){ g.beginPath(); g.moveTo(x+(w-12)*half, j); g.lineTo(x+w, j); g.stroke(); } }
+    }
+    const col = (cx, cy, broken) => { g.fillStyle = 'rgba(0,0,0,.2)'; g.beginPath(); g.arc(cx+3, cy+3, 6, 0, 7); g.fill(); g.fillStyle = broken ? '#cfc7b6' : '#fbf8f1'; g.beginPath(); g.arc(cx, cy, broken ? 4.5 : 6, 0, 7); g.fill(); g.strokeStyle = '#c7bea9'; g.lineWidth = 1; g.stroke(); };
+    const nx = Math.max(4, Math.round(w/18)), ny = Math.max(4, Math.round(h/18)), R = seeded(x+y);
+    for (let i=0;i<nx;i++){ const cx2 = x+6+i*(w-12)/(nx-1); col(cx2, y+6, v==='ruin'&&R()<.5); col(cx2, y+h-6, v==='ruin'&&R()<.5); }
+    for (let j=1;j<ny-1;j++){ const cy2 = y+6+j*(h-12)/(ny-1); col(x+6, cy2, v==='ruin'&&R()<.5); col(x+w-6, cy2, v==='ruin'&&R()<.5); }
+    if (v === 'ruin'){ g.fillStyle = 'rgba(25,18,14,.45)'; g.fillRect(x+10, y+10, w-20, h-20); for (let i=0;i<14;i++){ g.fillStyle = R()<.5 ? '#bdb4a2' : '#9a917f'; g.fillRect(x+10+R()*(w-30), y+10+R()*(h-30), 6+R()*12, 5+R()*8); } }
+  },
+  pnyx(g, o){ const {x,y,r} = o; g.fillStyle = 'rgba(0,0,0,.08)'; g.beginPath(); g.arc(x, y, r, Math.PI, 0); g.fill();
+    for (let i=0;i<7;i++){ g.strokeStyle = i%2 ? '#c9bea6' : '#b5a98f'; g.lineWidth = 5; g.beginPath(); g.arc(x, y, r-i*14, Math.PI*1.05, Math.PI*1.95); g.stroke(); }
+    g.fillStyle = '#d9d0bd'; g.fillRect(x-22, y-6, 44, 18); g.fillStyle = '#c4b99f'; g.fillRect(x-14, y-14, 28, 8); },
+  tree(g, o){ const {x,y} = o, k = o.k || 'olive';
+    if (k === 'cypress'){ g.fillStyle = 'rgba(0,0,0,.22)'; g.beginPath(); g.ellipse(x+8, y+6, 9, 6, 0, 0, 7); g.fill(); g.fillStyle = '#3f5c3a'; g.beginPath(); g.ellipse(x, y-4, 8, 13, 0, 0, 7); g.fill(); g.fillStyle = '#56774d'; g.beginPath(); g.ellipse(x-2, y-7, 4, 8, 0, 0, 7); g.fill(); return; }
+    const c1 = k === 'pine' ? '#3f6a45' : '#7c9564', c2 = k === 'pine' ? '#55835a' : '#97ad7c';
+    g.fillStyle = 'rgba(0,0,0,.22)'; g.beginPath(); g.ellipse(x+7, y+7, 17, 12, 0, 0, 7); g.fill();
+    g.fillStyle = c1; [[0,0,14],[-9,-4,10],[9,-3,10],[2,-10,9]].forEach(([a,b,r]) => { g.beginPath(); g.arc(x+a, y+b, r, 0, 7); g.fill(); });
+    g.fillStyle = c2; [[-4,-6,6],[6,-8,5],[0,2,5]].forEach(([a,b,r]) => { g.beginPath(); g.arc(x+a, y+b, r, 0, 7); g.fill(); }); },
+  bush(g, o){ const {x,y} = o; g.fillStyle = 'rgba(0,0,0,.2)'; g.beginPath(); g.ellipse(x+4, y+5, 16, 10, 0, 0, 7); g.fill(); g.fillStyle = '#5f7f45'; [[0,0,12],[-9,2,9],[9,2,9],[0,-6,8]].forEach(([a,b,r]) => { g.beginPath(); g.arc(x+a, y+b, r, 0, 7); g.fill(); }); g.fillStyle = '#77985a'; g.beginPath(); g.arc(x-3, y-4, 5, 0, 7); g.fill(); },
+  hay(g, o){ const {x,y} = o; g.fillStyle = 'rgba(0,0,0,.22)'; g.fillRect(x-14, y-6, 34, 22); g.fillStyle = '#7a5638'; g.fillRect(x-18, y-12, 36, 22); g.fillStyle = '#e2c36a'; g.beginPath(); g.ellipse(x, y-3, 16, 10, 0, 0, 7); g.fill(); g.strokeStyle = '#c9a74a'; g.lineWidth = 1; for (let i=-12;i<12;i+=4){ g.beginPath(); g.moveTo(x+i, y-8); g.lineTo(x+i+3, y+3); g.stroke(); } g.fillStyle = '#4a3424'; g.beginPath(); g.arc(x-14, y+10, 4, 0, 7); g.arc(x+14, y+10, 4, 0, 7); g.fill(); },
+  stall(g, o){ const {x,y} = o, c = o.c || '#009BA8'; shadowRect(g, x, y, 40, 26, 5); for (let i=0;i<5;i++){ g.fillStyle = i%2 ? '#f3ead8' : c; g.fillRect(x+i*8, y, 8, 26); } g.fillStyle = '#c96a34'; g.beginPath(); g.arc(x+10, y+34, 5, 0, 7); g.arc(x+22, y+35, 5, 0, 7); g.fill(); g.fillStyle = '#d8c070'; g.beginPath(); g.arc(x+33, y+34, 5, 0, 7); g.fill(); },
+  statue(g, o){ const {x,y} = o; g.fillStyle = 'rgba(0,0,0,.22)'; g.fillRect(x-8, y-4, 22, 18); g.fillStyle = '#cfc6b3'; g.fillRect(x-11, y-11, 22, 22); g.fillStyle = '#f2ede2'; g.beginPath(); g.arc(x, y-2, 6, 0, 7); g.fill(); g.fillRect(x-4, y+2, 8, 7); },
+  altar(g, o){ const {x,y} = o; shadowRect(g, x-14, y-10, 28, 20, 4); g.fillStyle = '#e4dccb'; g.fillRect(x-14, y-10, 28, 20); g.fillStyle = '#5a4434'; g.fillRect(x-6, y-4, 12, 8); },
+  well(g, o){ const {x,y} = o; g.fillStyle = 'rgba(0,0,0,.2)'; g.beginPath(); g.arc(x+4, y+4, 12, 0, 7); g.fill(); g.fillStyle = '#b8ab92'; g.beginPath(); g.arc(x, y, 12, 0, 7); g.fill(); g.fillStyle = '#1c4f5a'; g.beginPath(); g.arc(x, y, 7, 0, 7); g.fill(); },
+  crates(g, o){ const {x,y} = o; [[0,0],[14,2],[6,-12]].forEach(([a,b]) => { g.fillStyle = 'rgba(0,0,0,.2)'; g.fillRect(x+a+3, y+b+3, 13, 13); g.fillStyle = '#9b7247'; g.fillRect(x+a, y+b, 13, 13); g.strokeStyle = '#6e4f31'; g.strokeRect(x+a+.5, y+b+.5, 12, 12); g.beginPath(); g.moveTo(x+a, y+b); g.lineTo(x+a+13, y+b+13); g.stroke(); }); },
+  amph(g, o){ const {x,y} = o; for (let i=0;i<(o.n||4);i++){ const a = x+(i%3)*11, b = y+Math.floor(i/3)*11; g.fillStyle = 'rgba(0,0,0,.2)'; g.beginPath(); g.arc(a+3, b+3, 5, 0, 7); g.fill(); g.fillStyle = i%2 ? '#c96a34' : '#b4572a'; g.beginPath(); g.arc(a, b, 5, 0, 7); g.fill(); g.fillStyle = '#2a1d16'; g.beginPath(); g.arc(a, b, 2, 0, 7); g.fill(); } },
+  tent(g, o){ const {x,y} = o, c = o.c || '#7a2f4a'; g.fillStyle = 'rgba(0,0,0,.25)'; g.beginPath(); g.moveTo(x+6, y-14); g.lineTo(x+26, y+6); g.lineTo(x+6, y+26); g.lineTo(x-14, y+6); g.fill();
+    g.fillStyle = c; g.beginPath(); g.moveTo(x, y-20); g.lineTo(x+20, y); g.lineTo(x, y+20); g.lineTo(x-20, y); g.fill(); g.fillStyle = shade(c, .78); g.beginPath(); g.moveTo(x, y-20); g.lineTo(x+20, y); g.lineTo(x, y); g.fill(); g.beginPath(); g.moveTo(x, y+20); g.lineTo(x-20, y); g.lineTo(x, y); g.fill(); g.fillStyle = '#e9b04a'; g.beginPath(); g.arc(x, y, 3, 0, 7); g.fill(); },
+  boat(g, o){ drawShip(g, o.x, o.y, o.a||0, o.c||'#5a3a28', o.c2||'#c9a874', 0, o.s||1, false); },
+  rubble(g, o){ const R = seeded(o.x*3+o.y); for (let i=0;i<9;i++){ g.fillStyle = R()<.5 ? '#bdb4a2' : '#8f8676'; g.fillRect(o.x+R()*30-15, o.y+R()*24-12, 5+R()*9, 4+R()*7); } },
+  fieldfire(g, o){ g.fillStyle = 'rgba(40,25,15,.5)'; g.beginPath(); g.ellipse(o.x, o.y, o.r, o.r*.7, 0, 0, 7); g.fill(); },
+  banner(g, o){ const {x,y} = o; g.fillStyle = '#5a3f2c'; g.fillRect(x-1, y-24, 3, 26); g.fillStyle = o.c || '#E61149'; g.fillRect(x+2, y-24, 14, 10); },
+  owlstone(g, o){ const {x,y} = o; g.fillStyle = 'rgba(0,0,0,.2)'; g.beginPath(); g.arc(x+4, y+4, 14, 0, 7); g.fill(); g.fillStyle = '#cfc6b3'; g.beginPath(); g.arc(x, y, 14, 0, 7); g.fill(); g.fillStyle = '#9a8f7c'; g.beginPath(); g.arc(x, y, 9, 0, 7); g.fill(); },
+  kleroterion(g, o){ const {x,y} = o; shadowRect(g, x-12, y-18, 24, 36, 4); g.fillStyle = '#ddd5c4'; g.fillRect(x-12, y-18, 24, 36); g.fillStyle = '#6e6553'; for (let i=0;i<5;i++) for (let j=0;j<6;j++) g.fillRect(x-9+i*4.4, y-14+j*5, 2.5, 2); }
+};
+function roofRect(g, x, y, w, h, c){
+  const horiz = w >= h; g.fillStyle = c; g.fillRect(x, y, w, h);
+  g.fillStyle = shade(c, .82); if (horiz) g.fillRect(x, y+h/2, w, h/2); else g.fillRect(x+w/2, y, w/2, h);
+  g.strokeStyle = shade(c, .7); g.lineWidth = 1;
+  if (horiz){ for (let i=x+4; i<x+w; i+=6){ g.beginPath(); g.moveTo(i+.5, y); g.lineTo(i+.5, y+h); g.stroke(); } g.strokeStyle = shade(c, 1.15); g.lineWidth = 3; g.beginPath(); g.moveTo(x, y+h/2); g.lineTo(x+w, y+h/2); g.stroke(); }
+  else { for (let j=y+4; j<y+h; j+=6){ g.beginPath(); g.moveTo(x, j+.5); g.lineTo(x+w, j+.5); g.stroke(); } g.strokeStyle = shade(c, 1.15); g.lineWidth = 3; g.beginPath(); g.moveTo(x+w/2, y); g.lineTo(x+w/2, y+h); g.stroke(); }
+}
+
+/* ---------- personages ---------- */
+/* look: {tunic, skin, hair, helm, crest, shield, emb, weapon, cape, scale, female} */
+const LOOK = {
+  hero:    { tunic:'#2b4a52', cape:'#1f3a40', skin:'#d9a77c', helm:'hood', shield:'#009BA8', emb:'owl', weapon:'spear', sash:'#E61149' },
+  athener: { tunic:'#f1ead8', skin:'#d9a77c', hair:'#3a2a1e', helm:'none', weapon:'none' },
+  hopliet: { tunic:'#c8372d', skin:'#c98f63', helm:'corinth', crest:'#e9e1cf', shield:'#c9952e', emb:'owl', weapon:'spear' },
+  spartaan:{ tunic:'#a01e22', cape:'#7d1418', skin:'#c98f63', helm:'corinth', crest:'#1f1f1f', shield:'#b8862a', emb:'lambda', weapon:'spear' },
+  perzisch:{ tunic:'#3b4d8a', skin:'#b07a50', helm:'tiara', shield:'#9a7a3a', emb:'wicker', weapon:'spear', sash:'#e9b04a' },
+  boog:    { tunic:'#6b3a7a', skin:'#b07a50', helm:'tiara', weapon:'bow', sash:'#e9b04a' },
+  makedon: { tunic:'#6a2a5a', skin:'#c98f63', helm:'phryg', crest:'#e9b04a', shield:'#c9a23a', emb:'sun', weapon:'sarissa' },
+  thebaan: { tunic:'#2f5f9e', skin:'#c98f63', helm:'corinth', crest:'#e9e1cf', shield:'#9aa1a8', emb:'club', weapon:'spear' },
+  heloot:  { tunic:'#8a7a5c', skin:'#b88a60', hair:'#2a1d14', helm:'none', weapon:'none' },
+  slaaf:   { tunic:'#a39274', skin:'#9a6a48', hair:'#1a1410', helm:'none', weapon:'none' },
+  vrouw:   { tunic:'#61C2CB', skin:'#e0b08a', hair:'#3a2214', helm:'none', female:true, weapon:'none' },
+  metoik:  { tunic:'#EE7D22', skin:'#c48a5e', hair:'#2a1d14', helm:'none', weapon:'none' },
+  elite:   { tunic:'#f6f0e2', skin:'#e0b08a', hair:'#5a3a24', helm:'none', weapon:'none', sash:'#7a2f8a' },
+  oude:    { tunic:'#e9e2d1', skin:'#d9a77c', hair:'#e7e2d6', helm:'none', weapon:'none' },
+  jongen:  { tunic:'#a01e22', skin:'#c98f63', hair:'#3a2a1e', helm:'none', weapon:'spear', scale:.8 },
+  kind:    { tunic:'#94C021', skin:'#e0b08a', hair:'#3a2214', helm:'none', weapon:'none', scale:.72 },
+  strateeg:{ tunic:'#f1ead8', cape:'#7a2f8a', skin:'#d9a77c', helm:'corinth', crest:'#7a2f8a', weapon:'none' },
+  koning:  { tunic:'#a01e22', cape:'#5a0e10', skin:'#c98f63', helm:'corinth', crest:'#e9b04a', weapon:'none' },
+  philippos:{ tunic:'#4a1a42', cape:'#e9b04a', skin:'#c98f63', helm:'phryg', crest:'#e9b04a', weapon:'none' }
+};
+
+function drawHuman(g, e, time){
+  const L = e.look, s = (L.scale||1) * (e.big||1), x = e.x, y = e.y, a = e.dir || 0;
+  if (e.dead){ drawFallen(g, e); return; }
+  const walk = e.moving ? Math.sin(time*14 + e.x*.1) : 0, flash = e.flash > 0;
+  g.save(); g.translate(x, y); g.scale(s, s);
+  g.globalAlpha = e.hidden ? .45 : 1;
+  g.fillStyle = 'rgba(0,0,0,.25)'; g.beginPath(); g.ellipse(2, 9, 10, 5, 0, 0, 7); g.fill();
+  const fx = Math.cos(a), fy = Math.sin(a), px = -fy, py = fx;
+  /* benen */
+  g.strokeStyle = shade(L.skin, .85); g.lineWidth = 3.4; g.lineCap = 'round';
+  g.beginPath(); g.moveTo(-3, 3); g.lineTo(-3 + walk*2.5, 10); g.moveTo(3, 3); g.lineTo(3 - walk*2.5, 10); g.stroke();
+  /* mantel */
+  if (L.cape){ g.fillStyle = L.cape; g.beginPath(); g.moveTo(-8, -4); g.quadraticCurveTo(-fx*14, -fy*6 + 8, 8, -4); g.closePath(); g.fill(); }
+  /* wapen achter of voor */
+  const atk = e.atkT > 0 ? Math.sin((1 - e.atkT/.2)*Math.PI) : 0;
+  const drawWeapon = () => {
+    if (L.weapon === 'spear' || L.weapon === 'sarissa'){
+      const len = L.weapon === 'sarissa' ? 64 : 30, ext = atk * (L.weapon === 'sarissa' ? 10 : 14);
+      const bx = px*7 + fx*(-6+ext), by = py*7 - 2 + fy*(-6+ext);
+      g.strokeStyle = '#6b4a2e'; g.lineWidth = 2.2; g.beginPath(); g.moveTo(bx, by); g.lineTo(bx + fx*len, by + fy*len); g.stroke();
+      g.fillStyle = '#c9ced3'; g.beginPath(); const tx = bx + fx*len, ty = by + fy*len; g.moveTo(tx + fx*7, ty + fy*7); g.lineTo(tx + px*2.6, ty + py*2.6); g.lineTo(tx - px*2.6, ty - py*2.6); g.fill();
+    } else if (L.weapon === 'bow'){ g.strokeStyle = '#6b4a2e'; g.lineWidth = 2; g.beginPath(); g.arc(fx*8, fy*8 - 2, 9, a - 1.3, a + 1.3); g.stroke(); }
+  };
+  if (fy < 0) drawWeapon();
+  /* lichaam */
+  g.fillStyle = flash ? '#ffffff' : L.tunic; g.beginPath(); g.ellipse(0, 0, 8.5, 7.5, 0, 0, 7); g.fill();
+  g.fillStyle = 'rgba(0,0,0,.12)'; g.beginPath(); g.ellipse(0, 3, 8, 4, 0, 0, Math.PI); g.fill();
+  if (L.sash){ g.strokeStyle = L.sash; g.lineWidth = 2.2; g.beginPath(); g.moveTo(-7, -3); g.lineTo(6, 4); g.stroke(); }
+  /* schild aan de andere kant */
+  if (L.shield){ const sx = -px*8 + fx*2, sy = -py*8 + fy*2 - 1; g.fillStyle = 'rgba(0,0,0,.2)'; g.beginPath(); g.arc(sx+1.5, sy+2, 8.5, 0, 7); g.fill();
+    g.fillStyle = flash ? '#fff' : L.shield; g.beginPath(); g.arc(sx, sy, 8.5, 0, 7); g.fill(); g.strokeStyle = shade(L.shield, .7); g.lineWidth = 1.4; g.stroke(); emblem(g, L.emb, sx, sy); }
+  /* hoofd */
+  g.fillStyle = L.skin; g.beginPath(); g.arc(0, -9, 5.6, 0, 7); g.fill();
+  helmet(g, L, a, fx, fy);
+  if (fy > -0.2 && L.helm !== 'corinth' && L.helm !== 'hood'){ g.fillStyle = '#1f2b33'; g.fillRect(-2.6 + fx*1.5, -9.5, 1.4, 1.6); g.fillRect(1.4 + fx*1.5, -9.5, 1.4, 1.6); }
+  if (fy >= 0) drawWeapon();
+  g.restore();
+  if (e.hpBar && e.hp < e.maxhp){ g.fillStyle = 'rgba(0,0,0,.5)'; g.fillRect(x-12, y-26*s, 24, 4); g.fillStyle = e.team === 'g' ? '#94C021' : '#E61149'; g.fillRect(x-12, y-26*s, 24*Math.max(0,e.hp)/e.maxhp, 4); }
+}
+function helmet(g, L, a, fx, fy){
+  const h = L.helm;
+  if (h === 'hood'){ g.fillStyle = '#1f3a40'; g.beginPath(); g.arc(0, -9.5, 6.6, 0, 7); g.fill(); g.beginPath(); g.moveTo(-5, -10); g.lineTo(-fx*9, -9 - fy*9 - 3); g.lineTo(5, -10); g.fill(); g.fillStyle = '#d9a77c'; if (fy > -0.3){ g.beginPath(); g.ellipse(fx*2.5, -8 + fy*1.5, 3.2, 3, 0, 0, 7); g.fill(); g.fillStyle = '#1f2b33'; g.fillRect(-1.8 + fx*2.5, -8.8, 1.2, 1.4); g.fillRect(1 + fx*2.5, -8.8, 1.2, 1.4); } return; }
+  if (h === 'corinth'){ g.fillStyle = '#b8862a'; g.beginPath(); g.arc(0, -9.5, 6.3, 0, 7); g.fill(); g.fillStyle = '#8a6420'; if (fy > -0.3){ g.fillRect(-3.5 + fx*2, -10, 7, 1.8); g.fillRect(-.8 + fx*2, -10, 1.6, 5); }
+    if (L.crest){ g.strokeStyle = L.crest; g.lineWidth = 3.5; g.beginPath(); g.moveTo(-fx*8, -14 - fy*4); g.lineTo(fx*6, -14 + fy*3); g.stroke(); } return; }
+  if (h === 'tiara'){ g.fillStyle = '#e9e1cf'; g.beginPath(); g.arc(0, -10, 6, 0, 7); g.fill(); g.fillStyle = '#c9b993'; g.beginPath(); g.moveTo(-5, -11); g.lineTo(0, -18); g.lineTo(5, -11); g.fill(); g.fillStyle = '#1a1410'; g.beginPath(); g.ellipse(0, -5, 4, 3, 0, 0, Math.PI); g.fill(); return; }
+  if (h === 'phryg'){ g.fillStyle = '#c9a23a'; g.beginPath(); g.arc(0, -9.5, 6.2, 0, 7); g.fill(); g.beginPath(); g.moveTo(-4, -12); g.quadraticCurveTo(fx*10, -20 + fy*2, 4, -12); g.fill(); if (L.crest){ g.fillStyle = L.crest; g.beginPath(); g.arc(fx*5, -17, 2.5, 0, 7); g.fill(); } return; }
+  if (L.hair){ g.fillStyle = L.hair; g.beginPath(); g.arc(-fx*1.2, -10.5 - fy*1.2, L.female ? 6.4 : 5.4, Math.PI*0.9 + (fy<0?0:0), Math.PI*2.1); g.fill(); if (L.female){ g.beginPath(); g.arc(-fx*5, -8 - fy*5, 3.2, 0, 7); g.fill(); } }
+}
+function emblem(g, k, x, y){
+  g.save(); g.translate(x, y);
+  if (k === 'lambda'){ g.strokeStyle = '#5a1012'; g.lineWidth = 2.2; g.beginPath(); g.moveTo(-4, 4); g.lineTo(0, -4); g.lineTo(4, 4); g.stroke(); }
+  else if (k === 'owl'){ g.fillStyle = '#3a2a1e'; g.beginPath(); g.arc(-1.8, -1, 1.6, 0, 7); g.arc(1.8, -1, 1.6, 0, 7); g.fill(); g.beginPath(); g.moveTo(-1, 1.5); g.lineTo(0, 3.5); g.lineTo(1, 1.5); g.fill(); }
+  else if (k === 'wicker'){ g.strokeStyle = '#6b5428'; g.lineWidth = 1; for (let i=-6;i<=6;i+=3){ g.beginPath(); g.moveTo(i, -6); g.lineTo(i, 6); g.stroke(); } }
+  else if (k === 'sun'){ g.fillStyle = '#7a4a10'; g.beginPath(); g.arc(0, 0, 2, 0, 7); g.fill(); g.strokeStyle = '#7a4a10'; g.lineWidth = 1.1; for (let i=0;i<8;i++){ const b = i*Math.PI/4; g.beginPath(); g.moveTo(Math.cos(b)*3, Math.sin(b)*3); g.lineTo(Math.cos(b)*6.5, Math.sin(b)*6.5); g.stroke(); } }
+  else if (k === 'club'){ g.strokeStyle = '#3a3f44'; g.lineWidth = 2.5; g.beginPath(); g.moveTo(-4, 4); g.lineTo(4, -4); g.stroke(); }
+  g.restore();
+}
+function drawFallen(g, e){
+  const L = e.look; g.save(); g.translate(e.x, e.y); g.rotate(e.fallA || .4); g.globalAlpha = Math.min(1, e.fade === undefined ? 1 : e.fade);
+  g.fillStyle = 'rgba(0,0,0,.25)'; g.beginPath(); g.ellipse(2, 3, 15, 7, 0, 0, 7); g.fill();
+  g.fillStyle = shade(L.tunic, .7); g.beginPath(); g.ellipse(0, 0, 12, 6.5, 0, 0, 7); g.fill();
+  g.fillStyle = shade(L.skin, .8); g.beginPath(); g.arc(13, 0, 5, 0, 7); g.fill();
+  if (L.helm === 'corinth' || L.helm === 'phryg'){ g.fillStyle = '#8a6a2a'; g.beginPath(); g.arc(13, 0, 5.4, 0, 7); g.fill(); }
+  if (L.helm === 'tiara'){ g.fillStyle = '#cfc6b1'; g.beginPath(); g.arc(13, 0, 5.2, 0, 7); g.fill(); }
+  if (L.shield){ g.fillStyle = shade(L.shield, .75); g.beginPath(); g.arc(-6, 9, 7.5, 0, 7); g.fill(); }
+  if (L.weapon === 'spear' || L.weapon === 'sarissa'){ g.strokeStyle = '#5a3f2c'; g.lineWidth = 2; g.beginPath(); g.moveTo(-14, -8); g.lineTo(22, -12); g.stroke(); }
+  g.restore();
+}
+
+/* ---------- schip (trireme, van bovenaf) ---------- */
+function drawShip(g, x, y, a, hull, deck, oarT, s=1, battle=true, flash=false){
+  g.save(); g.translate(x, y); g.rotate(a); g.scale(s, s);
+  g.fillStyle = 'rgba(0,0,0,.25)'; g.beginPath(); g.ellipse(5, 6, 56, 13, 0, 0, 7); g.fill();
+  /* riemen */
+  g.strokeStyle = '#6b4a2e'; g.lineWidth = 1.6;
+  for (let i=-36; i<=30; i+=6){ const w = Math.sin(oarT*6 + i*.2)*4; g.beginPath(); g.moveTo(i, -9); g.lineTo(i - 3 + w, -22); g.moveTo(i, 9); g.lineTo(i - 3 + w, 22); g.stroke(); }
+  g.fillStyle = flash ? '#fff' : hull; g.beginPath(); g.moveTo(-48, -8); g.quadraticCurveTo(-54, 0, -48, 8); g.lineTo(38, 9); g.quadraticCurveTo(52, 6, 56, 0); g.quadraticCurveTo(52, -6, 38, -9); g.closePath(); g.fill();
+  g.fillStyle = '#7d858c'; g.beginPath(); g.moveTo(56, -2); g.lineTo(64, 0); g.lineTo(56, 2); g.fill();
+  g.fillStyle = deck; g.fillRect(-40, -5, 76, 10);
+  g.fillStyle = '#fff'; g.beginPath(); g.arc(46, -5, 2.2, 0, 7); g.arc(46, 5, 2.2, 0, 7); g.fill(); g.fillStyle = '#111'; g.beginPath(); g.arc(46.6, -5, 1, 0, 7); g.arc(46.6, 5, 1, 0, 7); g.fill();
+  if (!battle){ g.fillStyle = '#f3ead8'; g.fillRect(-4, -18, 6, 36); g.fillStyle = '#E61149'; g.fillRect(-4, -18, 6, 6); g.fillRect(-4, 12, 6, 6); }
+  g.fillStyle = '#5a3f2c'; g.beginPath(); g.arc(-2, 0, 2.5, 0, 7); g.fill();
+  g.restore();
+}
+
+/* Glaux als klein uiltje in de wereld */
+function drawOwl(g, x, y, t){
+  const b = Math.sin(t*3)*2; g.save(); g.translate(x, y + b);
+  g.fillStyle = 'rgba(0,0,0,.2)'; g.beginPath(); g.ellipse(0, 12 - b, 8, 3, 0, 0, 7); g.fill();
+  g.fillStyle = '#8e6c4e'; g.beginPath(); g.ellipse(0, 0, 9, 11, 0, 0, 7); g.fill(); g.fillStyle = '#efdcb8'; g.beginPath(); g.ellipse(0, 3, 6, 7, 0, 0, 7); g.fill();
+  g.fillStyle = '#7a5a3f'; g.beginPath(); g.moveTo(-8, -6); g.lineTo(-7, -13); g.lineTo(-3, -8); g.fill(); g.beginPath(); g.moveTo(8, -6); g.lineTo(7, -13); g.lineTo(3, -8); g.fill();
+  g.fillStyle = '#fff'; g.beginPath(); g.arc(-3.5, -3, 3.4, 0, 7); g.arc(3.5, -3, 3.4, 0, 7); g.fill(); g.fillStyle = '#1f2b33'; g.beginPath(); g.arc(-3.2, -2.6, 1.7, 0, 7); g.arc(3.8, -2.6, 1.7, 0, 7); g.fill();
+  g.fillStyle = '#EE7D22'; g.beginPath(); g.moveTo(-1.3, 0); g.lineTo(0, 2.6); g.lineTo(1.3, 0); g.fill();
+  g.fillStyle = '#009BA8'; g.fillRect(-7, 5, 14, 2.5);
+  g.restore();
+}
+
+/* ================== WERELD: zones bouwen en voorbereiden ================== */
+const tpx = (x, y) => ({ x: x*T + T/2, y: y*T + T/2 });
+function Zone(id, w, h, base, pal, title){ return { id, w, h, pal, title, t: new Uint8Array(w*h).fill(base), objs: [], solidRects: [], hides: [], vps: [], pts: {}, seed: id.length*97+13, naval: false, tint: null }; }
+function fill(z, x, y, w, h, t){ for (let j=y; j<y+h; j++) for (let i=x; i<x+w; i++) if (i>=0 && j>=0 && i<z.w && j<z.h) z.t[j*z.w+i] = t; }
+function setT(z, x, y, t){ if (x>=0 && y>=0 && x<z.w && y<z.h) z.t[y*z.w+x] = t; }
+function getT(z, x, y){ return (x<0||y<0||x>=z.w||y>=z.h) ? -1 : z.t[y*z.w+x]; }
+function blob(z, cx, cy, rx, ry, t, rough=.25, seed=1, only){ const R = seeded(seed*31+7); for (let j=Math.floor(cy-ry-2); j<=cy+ry+2; j++) for (let i=Math.floor(cx-rx-2); i<=cx+rx+2; i++){ const d = ((i-cx)/rx)**2 + ((j-cy)/ry)**2; if (d < 1 - rough*R()) { if (!only || only.includes(getT(z,i,j))) setT(z, i, j, t); } } }
+function road(z, pts, w, t){ for (let k=0; k<pts.length-1; k++){ const [x1,y1] = pts[k], [x2,y2] = pts[k+1], n = Math.max(Math.abs(x2-x1), Math.abs(y2-y1))*2+1; for (let s=0; s<=n; s++){ const x = x1 + (x2-x1)*s/n, y = y1 + (y2-y1)*s/n; fill(z, Math.round(x - w/2), Math.round(y - w/2), w, w, t); } } }
+function O(z, type, o, solid){ o.type = type; z.objs.push(o); if (solid){ const r = solid === true ? o : solid; z.solidRects.push(r); } return o; }
+/* object op tegelcoördinaten (gebouwen) */
+function bld(z, type, tx, ty, tw, th, extra={}){ return O(z, type, Object.assign({ x: tx*T+2, y: ty*T+2, w: tw*T-4, h: th*T-4, tx, ty, tw, th }, extra), true); }
+function tree(z, tx, ty, k='olive'){ const p = tpx(tx, ty); O(z, 'tree', { x: p.x, y: p.y, k, tx, ty, tw: 1, th: 1 }, { tx, ty, tw: 1, th: 1 }); }
+function hide(z, tx, ty, k='bush'){ const p = tpx(tx, ty); O(z, k, { x: p.x, y: p.y }); z.hides.push({ x: p.x, y: p.y, r: 20 }); }
+function vp(z, id, tx, ty, label){ const p = tpx(tx, ty); z.vps.push({ id, x: p.x, y: p.y, label }); O(z, 'owlstone', { x: p.x, y: p.y }); }
+
+function finalize(z){
+  z.solid = new Uint8Array(z.w*z.h);
+  for (let i=0; i<z.t.length; i++){ const t = z.t[i]; z.solid[i] = z.naval ? (t === TL.W ? 0 : 1) : (SOLID_T.has(t) ? 1 : 0); }
+  for (const r of z.solidRects) for (let j=r.ty; j<r.ty+r.th; j++) for (let i=r.tx; i<r.tx+r.tw; i++) if (i>=0 && j>=0 && i<z.w && j<z.h) z.solid[j*z.w+i] = 1;
+  z.seen = new Uint8Array(Math.ceil(z.w/2)*Math.ceil(z.h/2));
+  return z;
+}
+function prerender(z){
+  const c = document.createElement('canvas'); c.width = z.w*T; c.height = z.h*T; const g = c.getContext('2d');
+  drawTiles(g, z);
+  z.objs.slice().sort((a,b) => (a.y + (a.h||0)) - (b.y + (b.h||0))).forEach(o => { if (DRAW[o.type]) DRAW[o.type](g, o); });
+  z.bg = c;
+  const m = document.createElement('canvas'), S = 3; m.width = z.w*S; m.height = z.h*S; const mg = m.getContext('2d');
+  mg.drawImage(c, 0, 0, m.width, m.height);
+  z.mini = m;
+}
+
+/* ---------------- ATHENE ---------------- */
+function buildAthene(variant){ /* 'vroeg' | 'brand' | 'goud' */
+  const z = Zone('athene', 84, 60, TL.G, 'attika', variant === 'goud' ? 'Athene, 432 v.C.' : variant === 'brand' ? 'Athene, 480 v.C.' : 'Athene, 490 v.C.');
+  z.variant = variant;
+  fill(z, 0, 0, 11, 60, TL.W); blob(z, 9, 46, 6, 9, TL.W, .1, 2);
+  fill(z, 11, 36, 8, 18, TL.S); fill(z, 12, 40, 5, 10, TL.P);
+  road(z, [[16,45],[24,43],[30,39]], 3, TL.D);
+  /* stadsmuur met poorten */
+  fill(z, 28, 4, 55, 1, TL.L); fill(z, 28, 56, 55, 1, TL.L); fill(z, 28, 4, 1, 53, TL.L); fill(z, 82, 4, 1, 53, TL.L);
+  fill(z, 28, 37, 1, 4, TL.D); fill(z, 82, 27, 1, 4, TL.D); fill(z, 50, 56, 4, 1, TL.D);
+  fill(z, 29, 5, 53, 51, TL.Y);
+  /* straten */
+  road(z, [[29,39],[40,34],[47,31]], 3, TL.D); road(z, [[47,31],[60,29],[81,29]], 3, TL.D); road(z, [[47,31],[48,44],[51,55]], 2, TL.D); road(z, [[40,34],[37,40]], 2, TL.D);
+  road(z, [[47,26],[49,19]], 2, TL.D);
+  /* agora */
+  fill(z, 40, 26, 15, 11, TL.P);
+  bld(z, 'stoa', 40, 22, 15, 4, { roof: '#b85a36' });
+  bld(z, 'stoa', 55, 27, 3, 9, { roof: '#a94f30' });
+  O(z, 'stall', tpx(42,31), { tx:42, ty:31, tw:1, th:1 }); z.objs[z.objs.length-1].c = '#009BA8'; z.objs[z.objs.length-1].x -= 16; z.objs[z.objs.length-1].y -= 12;
+  const st2 = O(z, 'stall', { x: 50*T, y: 33*T, c: '#EE7D22' }, { tx:50, ty:33, tw:2, th:1 });
+  O(z, 'altar', tpx(47,29)); O(z, 'statue', tpx(44,35)); O(z, 'well', tpx(52,28));
+  O(z, 'kleroterion', tpx(53,25), { tx:53, ty:25, tw:1, th:1 });
+  O(z, 'amph', { x: 41*T+6, y: 36*T+4, n: 5 });
+  z.pts.agora = tpx(47, 31); z.pts.stoa = tpx(47, 27); z.pts.klero = tpx(53, 26); z.pts.stall1 = tpx(43, 33); z.pts.stall2 = tpx(51, 35);
+  /* Pnyx */
+  blob(z, 36, 47, 6, 5, TL.H, .15, 4, [TL.Y, TL.G, TL.D]);
+  O(z, 'pnyx', Object.assign(tpx(36, 46), { r: 140 }));
+  z.pts.bema = tpx(36, 46); z.pts.pnyx = tpx(36, 43);
+  /* Akropolis */
+  blob(z, 63, 15, 13, 8, TL.R, .12, 9); blob(z, 63, 15, 10.5, 5.6, TL.M, .02, 3);
+  for (let i=0;i<6;i++) fill(z, 49+i, 17-Math.floor(i/3), 2, 2, TL.H);
+  fill(z, 50, 17, 4, 2, TL.H); fill(z, 53, 15, 2, 3, TL.H);
+  const tv = variant === 'brand' ? 'ruin' : variant === 'goud' ? 'painted' : 'whole';
+  bld(z, 'temple', 57, 12, 12, 6, { v: tv });
+  if (variant === 'goud'){ bld(z, 'temple', 70, 15, 3, 3, { v: 'whole' }); O(z, 'statue', tpx(55, 14)); }
+  vp(z, 'vp_akro', 71, 12, 'De Akropolis van Athene');
+  z.pts.akroTop = tpx(55, 16); z.pts.akroRamp = tpx(50, 19);
+  /* huizen */
+  const occ = new Set(); const R = seeded(variant === 'brand' ? 77 : 41);
+  const free = (x,y,w,h) => { for (let j=y-1;j<y+h+1;j++) for (let i=x-1;i<x+w+1;i++){ const t = getT(z,i,j); if (t !== TL.Y || occ.has(i+','+j)) return false; } return true; };
+  for (let y=6; y<55; y+=4) for (let x=30; x<81; x+=4){ const w = 2 + Math.floor(R()*2), h = 2 + Math.floor(R()*2); if (R() < .78 && free(x,y,w,h)){ for (let j=y;j<y+h;j++) for (let i=x;i<x+w;i++) occ.add(i+','+j); bld(z, 'house', x, y, w, h, { roof: pick(['#c0603a','#b5583a','#c96a44','#a9533a']), court: w===3&&h===3, burnt: variant==='brand' && R()<.6 }); } }
+  /* bomen en schuilplaatsen */
+  [[33,8],[38,14],[74,40],[78,46],[66,50],[31,26],[58,40],[75,8],[44,50]].forEach(([x,y]) => { if (getT(z,x,y)===TL.Y && !occ.has(x+','+y)) tree(z, x, y, pick(['olive','cypress'])); });
+  [[20,40],[22,47],[15,36],[19,52]].forEach(([x,y]) => tree(z, x, y, 'olive'));
+  [[39,38],[56,37],[46,46],[62,31],[31,36],[70,30],[49,52],[34,52],[25,44]].forEach(([x,y],i) => { if (!occ.has(x+','+y)) hide(z, x, y, i%3===0 ? 'hay' : 'bush'); });
+  /* haven */
+  O(z, 'boat', { x: 6*T, y: 40*T, a: Math.PI/2, s: .9 }); O(z, 'boat', { x: 6*T, y: 47*T, a: Math.PI/2, s: .9, c: '#4a3020' }); O(z, 'boat', { x: 7*T, y: 54*T, a: Math.PI/2, s: .9 });
+  O(z, 'crates', { x: 13*T, y: 38*T }); O(z, 'amph', { x: 15*T, y: 51*T, n: 6 });
+  z.pts.harbour = tpx(15, 45); z.pts.dock = tpx(13, 47); z.pts.gateW = tpx(30, 39); z.pts.gateE = tpx(80, 29); z.pts.home = tpx(70, 45);
+  if (variant === 'brand'){ for (let i=0;i<14;i++){ const x = 32 + Math.floor(R()*48), y = 7 + Math.floor(R()*46); if (getT(z,x,y) === TL.Y || getT(z,x,y) === TL.D) blob(z, x, y, 2, 2, TL.X, .4, i, [TL.Y, TL.D, TL.G]); } z.tint = 'brand'; }
+  if (variant === 'goud') z.tint = 'goud';
+  return z;
+}
+
+/* ---------------- SPARTA ---------------- */
+function buildSparta(){
+  const z = Zone('sparta', 70, 48, TL.G, 'sparta', 'Sparta, 490 v.C.');
+  for (let y=0;y<48;y++){ const w = 8 + Math.round(Math.sin(y*.35)*2 + Math.sin(y*.13)*2); fill(z, 0, y, w, 1, TL.R); }
+  blob(z, 4, 6, 6, 5, TL.R, .2, 2); blob(z, 18, 9, 5, 4, TL.H, .15, 5); vp(z, 'vp_sparta', 18, 8, 'De vallei van Sparta');
+  for (let y=0;y<48;y++){ const x = 54 + Math.round(Math.sin(y*.22)*2); fill(z, x, y, 3, 1, TL.W); }
+  fill(z, 52, 23, 8, 3, TL.P);
+  road(z, [[10,24],[30,24],[44,24],[62,24],[69,24]], 2, TL.D); road(z, [[40,24],[40,12]], 2, TL.D); road(z, [[30,24],[26,34]], 2, TL.D);
+  fill(z, 13, 30, 22, 14, TL.F); fill(z, 16, 6, 0, 0, TL.F);
+  fill(z, 35, 11, 11, 9, TL.D); z.pts.agoge = tpx(40, 15);
+  fill(z, 37, 21, 12, 9, TL.P); bld(z, 'stoa', 38, 26, 10, 3, { roof: '#9a4a2c' }); z.pts.gerousia = tpx(43, 25);
+  bld(z, 'temple', 44, 14, 5, 3, { v: 'whole' });
+  const R = seeded(19);
+  [[22,14],[28,12],[60,10],[62,36],[46,36],[30,18]].forEach(([cxh,cyh]) => { for (let k=0;k<4;k++){ const x = cxh + Math.floor(R()*5)-2, y = cyh + Math.floor(R()*5)-2; let ok = true; for (let j=y-1;j<y+3;j++) for (let i=x-1;i<x+3;i++) if (getT(z,i,j)!==TL.G) ok=false; if (ok) bld(z, 'house', x, y, 2, 2, { roof: '#a9533a', pal: 'sparta' }); } });
+  [[12,28],[38,32],[50,8],[65,30],[25,8],[34,44],[12,44]].forEach(([x,y]) => tree(z, x, y, pick(['olive','cypress','pine'])));
+  [[12,32],[36,30],[24,44],[36,40],[12,38],[30,28]].forEach(([x,y]) => hide(z, x, y, 'bush'));
+  hide(z, 33, 22, 'hay'); hide(z, 47, 31, 'hay');
+  z.pts.arrive = tpx(66, 24); z.pts.fields = tpx(22, 37); z.pts.heloot = tpx(16, 40); z.pts.vp = tpx(18, 9);
+  return z;
+}
+
+/* ---------------- VLAKTE (Marathon, Attika, Chaeronea) ---------------- */
+function buildMarathon(){
+  const z = Zone('marathon', 72, 42, TL.G, 'plain', 'Marathon, 490 v.C.');
+  for (let y=0;y<42;y++){ const x = 60 + Math.round(Math.sin(y*.3)*1.5); fill(z, x, y, 12, 1, TL.W); fill(z, x-3, y, 3, 1, TL.S); }
+  blob(z, 50, 7, 8, 5, TL.K, .3, 3); blob(z, 52, 7, 4, 2, TL.W, .3, 4);
+  for (let y=0;y<42;y++) fill(z, 0, y, 3 + Math.round(Math.sin(y*.4)*1.5), 1, TL.R); blob(z, 5, 20, 4, 6, TL.H, .2, 6);
+  [[52,18],[54,24],[52,30],[55,13],[54,35]].forEach(([x,y],i) => O(z, 'tent', Object.assign(tpx(x,y), { c: i%2 ? '#3b4d8a' : '#7a2f4a' }), { tx:x, ty:y, tw:1, th:1 }));
+  [[66,12],[67,22],[66,31]].forEach(([x,y]) => O(z, 'boat', { x: x*T, y: y*T, a: Math.PI/2, c: '#3a2a3a', c2: '#7a2f4a' }));
+  [[10,16],[10,24],[9,30]].forEach(([x,y]) => O(z, 'tent', Object.assign(tpx(x,y), { c: '#c8b48a' }), { tx:x, ty:y, tw:1, th:1 }));
+  [[20,6],[30,36],[40,4],[16,38],[44,38]].forEach(([x,y]) => tree(z, x, y, 'olive'));
+  O(z, 'banner', Object.assign(tpx(12,20), { c: '#009BA8' })); O(z, 'banner', Object.assign(tpx(50,22), { c: '#7a2f4a' }));
+  z.pts.greek = tpx(14, 21); z.pts.persian = tpx(42, 21); z.pts.start = tpx(12, 22);
+  return z;
+}
+function buildAttika(){
+  const z = Zone('attika', 72, 44, TL.G, 'attika', 'Attika, 431 v.C.');
+  fill(z, 0, 0, 72, 3, TL.L); fill(z, 0, 3, 72, 1, TL.D); fill(z, 34, 0, 4, 4, TL.D);
+  const R = seeded(5); for (let i=0;i<10;i++) fill(z, 4 + (i%5)*14, 8 + Math.floor(i/5)*16, 10, 10, TL.F);
+  road(z, [[36,3],[36,43]], 2, TL.D); road(z, [[0,24],[71,24]], 2, TL.D);
+  [[16,20],[52,20],[24,38],[60,38]].forEach(([x,y]) => bld(z, 'house', x, y, 3, 2, { roof: '#b5583a', court: false }));
+  for (let i=0;i<16;i++) tree(z, 2 + Math.floor(R()*68), 6 + Math.floor(R()*36), 'olive');
+  for (let i=0;i<7;i++) O(z, 'fieldfire', { x: (6 + R()*60)*T, y: (10 + R()*30)*T, r: 40 + R()*40 });
+  [[30,14],[42,30],[20,30],[54,12]].forEach(([x,y]) => hide(z, x, y, 'hay'));
+  z.pts.start = tpx(36, 6); z.pts.south = tpx(36, 38); z.tint = 'rook';
+  return z;
+}
+function buildChaeronea(){
+  const z = Zone('chaeronea', 80, 44, TL.G, 'grey', 'Chaeronea, 338 v.C.');
+  for (let x=0;x<80;x++){ const y = 38 + Math.round(Math.sin(x*.2)*1.4); fill(z, x, y, 1, 3, TL.W); fill(z, x, y+3, 1, 6, TL.K); }
+  for (let x=0;x<80;x++) fill(z, x, 0, 1, 3 + Math.round(Math.sin(x*.27)*1.5 + 1), TL.R); blob(z, 8, 7, 7, 4, TL.H, .2, 3);
+  [[6,14],[6,22],[6,30]].forEach(([x,y]) => O(z, 'tent', Object.assign(tpx(x,y), { c: '#c8b48a' }), { tx:x, ty:y, tw:1, th:1 }));
+  [[72,12],[74,20],[72,28]].forEach(([x,y]) => O(z, 'tent', Object.assign(tpx(x,y), { c: '#6a2a5a' }), { tx:x, ty:y, tw:1, th:1 }));
+  O(z, 'banner', Object.assign(tpx(9,20), { c: '#009BA8' })); O(z, 'banner', Object.assign(tpx(70,20), { c: '#e9b04a' }));
+  [[30,8],[50,34],[20,34],[60,8]].forEach(([x,y]) => tree(z, x, y, 'cypress'));
+  z.pts.start = tpx(14, 21); z.pts.line = tpx(24, 21); z.tint = 'grijs';
+  return z;
+}
+/* ---------------- THERMOPYLAE ---------------- */
+function buildThermo(){
+  const z = Zone('thermo', 84, 30, TL.R, 'pass', 'Thermopylae, 480 v.C.');
+  for (let x=0;x<84;x++){ const top = 11 + Math.round(Math.sin(x*.21)*1.6), bot = 18 + Math.round(Math.sin(x*.17+1)*1.4); fill(z, x, top, 1, bot-top, TL.D); fill(z, x, bot, 1, 2, TL.S); fill(z, x, bot+2, 1, 30, TL.W); if (Math.sin(x*.5)>.6) fill(z, x, top, 1, 1, TL.H); }
+  fill(z, 33, 10, 1, 4, TL.L); fill(z, 33, 17, 1, 3, TL.L);
+  blob(z, 46, 13, 2, 1.2, TL.K, .2, 2);
+  road(z, [[12,12],[10,6],[16,1]], 2, TL.H);
+  [[8,15],[12,16],[16,14]].forEach(([x,y]) => O(z, 'tent', Object.assign(tpx(x,y), { c: '#a01e22' }), { tx:x, ty:y, tw:1, th:1 }));
+  O(z, 'banner', Object.assign(tpx(30,13), { c: '#a01e22' }));
+  vp(z, 'vp_thermo', 24, 11, 'De nauwe pas van Thermopylae'); setT(z, 24, 11, TL.H); setT(z, 24, 12, TL.D);
+  z.pts.start = tpx(20, 15); z.pts.line = tpx(38, 15); z.pts.east = tpx(62, 15); z.pts.west = tpx(5, 15); z.pts.camp = tpx(12, 15); z.pts.springs = tpx(46, 13);
+  z.tint = 'avond';
+  return z;
+}
+/* ---------------- SALAMIS (zee) ---------------- */
+function buildSalamis(){
+  const z = Zone('salamis', 96, 60, TL.W, 'sea', 'Salamis, 480 v.C.'); z.naval = true;
+  blob(z, 30, -2, 60, 12, TL.G, .1, 2); for (let x=0;x<96;x++){ const y = 7 + Math.round(Math.sin(x*.15)*2); fill(z, x, 0, 1, y, TL.G); fill(z, x, y, 1, 1, TL.S); }
+  blob(z, 18, 50, 26, 16, TL.G, .1, 4); blob(z, 18, 50, 28, 18, TL.S, .1, 4, [TL.W]); blob(z, 18, 50, 25, 15, TL.G, .05, 4);
+  blob(z, 56, 32, 5, 3, TL.H, .2, 8); blob(z, 56, 32, 6, 4, TL.S, .1, 8, [TL.W]);
+  blob(z, 4, 30, 6, 8, TL.G, .2, 9);
+  [[30,4],[50,3],[70,4],[10,40],[24,46]].forEach(([x,y]) => tree(z, x, y, 'pine'));
+  z.pts.start = tpx(20, 26); z.pts.persEntry = tpx(90, 28);
+  return z;
+}
+
+const BUILDERS = { athene: v => buildAthene(v||'vroeg'), sparta: buildSparta, marathon: buildMarathon, thermo: buildThermo, salamis: buildSalamis, attika: buildAttika, chaeronea: buildChaeronea };
+function loadZone(id, variant){ const z = finalize(BUILDERS[id](variant)); prerender(z); return z; }
+
+/* ================== WEZENS: speler, bondgenoten, vijanden, schepen ================== */
+let Z = null, P = null, ents = [], parts = [], projs = [], decals = [], fires = [], rains = [], pickups = [];
+let time = 0, cam = { x: 0, y: 0 }, shake = 0, hurtFlash = 0, G = { mode: 'start', marker: null, battle: false, vpAnim: null };
+
+function mkEnt(o){
+  const L = typeof o.look === 'string' ? LOOK[o.look] : o.look;
+  const e = Object.assign({ x: 0, y: 0, r: 10, dir: Math.PI/2, hp: 3, maxhp: 3, speed: 70, team: 'n', kind: 'npc', atkT: 0, cd: 0, flash: 0, moving: false, state: 'idle', big: 1, tag: 'step', reach: 36, dmg: 1 }, o);
+  e.look = L; if (o.hp && !o.maxhp) e.maxhp = o.hp; return e;
+}
+function spawn(look, pt, o={}){ const e = mkEnt(Object.assign({ look, x: pt.x + (o.jit ? rnd(-o.jit, o.jit) : 0), y: pt.y + (o.jit ? rnd(-o.jit, o.jit) : 0) }, o)); e.home = { x: e.x, y: e.y }; ents.push(e); return e; }
+const hostile = (a, b) => a.team !== 'n' && b.team !== 'n' && a.team !== b.team && !a.dead && !b.dead && !(a.team === 'x' && b.kind !== 'player') && !(b.team === 'x' && a.kind !== 'player');
+
+/* ---------- botsingen met de wereld ---------- */
+function solidAt(px, py){ const tx = Math.floor(px/T), ty = Math.floor(py/T); if (tx<0 || ty<0 || tx>=Z.w || ty>=Z.h) return true; return Z.solid[ty*Z.w+tx] === 1; }
+function blocked(x, y, r){ return solidAt(x-r, y-r) || solidAt(x+r, y-r) || solidAt(x-r, y+r) || solidAt(x+r, y+r); }
+function moveEnt(e, dx, dy){ const r = e.r*.75; let ok = true; if (dx){ if (!blocked(e.x+dx, e.y, r)) e.x += dx; else ok = false; } if (dy){ if (!blocked(e.x, e.y+dy, r)) e.y += dy; else ok = false; } return ok; }
+function los(a, b){ const d = dist(a, b), n = Math.ceil(d/12); for (let i=1;i<n;i++){ const x = lerp(a.x, b.x, i/n), y = lerp(a.y, b.y, i/n); if (solidAt(x, y)) return false; } return true; }
+function steer(e, tx, ty, sp, dt){ const a = Math.atan2(ty - e.y, tx - e.x); e.dir = a; const ok = moveEnt(e, Math.cos(a)*sp*dt, Math.sin(a)*sp*dt); if (!ok){ const a2 = a + (e.side||1)*Math.PI/2; moveEnt(e, Math.cos(a2)*sp*dt*.8, Math.sin(a2)*sp*dt*.8); if (Math.random()<.01) e.side = -(e.side||1); } e.moving = true; }
+
+/* ---------- deeltjes ---------- */
+function puff(x, y, type, n=6){
+  for (let i=0;i<n;i++){
+    const p = { x, y, vx: rnd(-40,40), vy: rnd(-40,40), life: 0, max: rnd(.4,.8), s: rnd(2,4), c: '#d8c8a8', g: 0, type };
+    if (type === 'spark'){ p.c = pick(['#fff4c4','#ffd76a','#ffffff']); p.vx = rnd(-160,160); p.vy = rnd(-160,160); p.max = rnd(.15,.3); p.s = 2; }
+    if (type === 'blood'){ p.c = pick(['#7a1018','#9b1a22','#5a0c10']); p.vx = rnd(-90,90); p.vy = rnd(-110,30); p.g = 260; p.max = rnd(.3,.5); p.s = rnd(1.5,3); }
+    if (type === 'ember'){ p.c = pick(['#ffb347','#ff7a2a','#ffd76a']); p.vx = rnd(-15,15); p.vy = rnd(-60,-25); p.max = rnd(1,2.2); p.s = rnd(1.2,2.4); }
+    if (type === 'smoke'){ p.c = 'rgba(60,55,55,'; p.vx = rnd(-10,10)+12; p.vy = rnd(-35,-15); p.max = rnd(2,3.5); p.s = rnd(10,18); }
+    if (type === 'splash'){ p.c = '#e6f6f8'; p.vx = rnd(-70,70); p.vy = rnd(-70,70); p.max = rnd(.4,.8); p.s = rnd(2,3.5); }
+    if (type === 'wood'){ p.c = pick(['#6b4a2e','#4a3020','#8a6440']); p.vx = rnd(-110,110); p.vy = rnd(-110,110); p.max = rnd(.8,1.6); p.s = rnd(3,6); }
+    if (type === 'gold'){ p.c = pick(['#ffe28a','#e9b04a','#fff']); p.vx = rnd(-60,60); p.vy = rnd(-90,-20); p.max = rnd(.5,1); p.s = 2.5; }
+    parts.push(p);
+  }
+  if (parts.length > 700) parts.splice(0, parts.length - 700);
+}
+function stain(x, y){ decals.push({ x: x + rnd(-6,6), y: y + rnd(-4,8), r: rnd(3,7), a: .55 }); if (decals.length > 90) decals.shift(); }
+
+/* ---------- schade ---------- */
+function damage(t, d, src){
+  if (t.dead || t.invul > 0) return;
+  if (t.kind === 'player' && G.mode !== 'play') return;
+  if (t.kind === 'guard' && t.state !== 'hunt'){ t.state = 'hunt'; t.team = 'p'; SFX.alert(); }
+  t.hp -= d; t.flash = .12; t.hitT = 0;
+  if (src){ const a = Math.atan2(t.y - src.y, t.x - src.x); moveEnt(t, Math.cos(a)*10, Math.sin(a)*10); }
+  puff(t.x, t.y - 4, 'spark', 4); if (t.team !== 'x') { puff(t.x, t.y - 4, 'blood', 5); if (Math.random() < .5) stain(t.x, t.y); }
+  if (t.kind === 'player'){ SFX.hurt(); hurtFlash = .35; shake = Math.max(shake, 6); t.invul = .45; }
+  else SFX.hit();
+  if (t.hp <= 0){
+    if (t.yield){ t.hp = 0; t.yielded = true; t.team = 'n'; t.state = 'idle'; return; }
+    t.dead = true; t.fallA = rnd(-1, 1) + (src ? Math.atan2(t.y - src.y, t.x - src.x) : 0); t.fade = 1; t.deadT = 0;
+    if (t.kind === 'player') onPlayerDown();
+    else if (t.onDie) t.onDie(t);
+  }
+}
+function swing(e){
+  if (e.cd > 0) return false; e.cd = e.kind === 'player' ? .38 : (e.cdBase || 1.4); e.atkT = .2;
+  SFX.swing(); let hitAny = false;
+  for (const o of ents){ if (o === e || !hostile(e, o) || o.kind === 'ship') continue; const d = dist(e, o); if (d > e.reach + o.r) continue; const a = Math.atan2(o.y - e.y, o.x - e.x); if (Math.abs(angDiff(e.dir, a)) > 1.1 && d > 18) continue; const sneak = e.kind === 'player' && o.kind === 'guard' && o.state !== 'hunt'; if (sneak){ toast('<b>Sluipaanval!</b>', 1200); } damage(o, sneak ? 6 : e.dmg, e); hitAny = true; if (e.kind !== 'player') break; }
+  if (hitAny && e.kind === 'player'){ SFX.clang(); shake = Math.max(shake, 3); }
+  return hitAny;
+}
+
+/* ---------- speler ---------- */
+let regenT = 0, stepT = 0, stamina = 1;
+function updatePlayer(dt){
+  const I = inp(); const run = I.run && stamina > .05;
+  let sp = P.speed * (run ? 1.65 : 1);
+  if (run && (I.mx || I.my)) stamina = Math.max(0, stamina - dt*.28); else stamina = Math.min(1, stamina + dt*.2);
+  P.moving = !!(I.mx || I.my);
+  if (P.moving){ P.dir = Math.atan2(I.my, I.mx); moveEnt(P, I.mx*sp*dt, I.my*sp*dt); stepT -= dt; if (stepT <= 0){ stepT = run ? .22 : .32; SFX.step(); if (run) puff(P.x, P.y + 8, 'dust', 1); } }
+  if (I.atk && G.canFight !== false) swing(P);
+  P.hidden = Z.hides.some(h => Math.hypot(h.x - P.x, h.y - P.y) < h.r) && !P.atkT;
+  /* herstel buiten gevecht */
+  P.hitT = (P.hitT||0) + dt; if (P.hitT > 4 && P.hp < P.maxhp){ regenT += dt; if (regenT > 1.2){ regenT = 0; P.hp++; } }
+  if (I.use) interact();
+}
+
+/* ---------- AI ---------- */
+function nearestHostile(e, range){ let best = null, bd = range; for (const o of ents){ if (o === e || o.kind === 'ship' || !hostile(e, o)) continue; const d = dist(e, o); if (d < bd){ bd = d; best = o; } } return best; }
+function updateAI(e, dt){
+  if (e.dead){ e.deadT += dt; if (e.team !== 'g' && e.deadT > 30) e.fade = Math.max(0, e.fade - dt*.2); return; }
+  e.moving = false;
+  if (e.kind === 'npc'){
+    if (e.follow && !e.safe){ const d = dist(e, P); if (d > 44 && d < 260) steer(e, P.x, P.y, P.speed * (d > 120 ? 1.4 : 1), dt); else if (d <= 44) e.dir = Math.atan2(P.y - e.y, P.x - e.x); }
+    else if (e.goto){ if (dist(e, e.goto) > 8) steer(e, e.goto.x, e.goto.y, e.speed, dt); else { e.goto = null; if (e.onArrive) e.onArrive(e); } }
+    else if (e.wander){ e.wt = (e.wt||0) - dt; if (e.wt <= 0){ e.wt = rnd(2, 5); e.wp = { x: e.home.x + rnd(-e.wander, e.wander), y: e.home.y + rnd(-e.wander, e.wander) }; } if (e.wp && dist(e, e.wp) > 6 && !blocked(e.wp.x, e.wp.y, 6)) steer(e, e.wp.x, e.wp.y, e.speed*.6, dt); }
+    if (!e.moving && dist(e, P) < 70 && (e.talk || e.faceP)) e.dir = Math.atan2(P.y - e.y, P.x - e.x);
+    return;
+  }
+  if (e.kind === 'guard') return updateGuard(e, dt);
+  if (e.phalanx){
+    const tgt = nearestHostile(e, 110);
+    if (e.windup > 0){ e.windup -= dt; if (tgt) e.dir = Math.atan2(tgt.y - e.y, tgt.x - e.x); if (e.windup <= 0) swing(e); return; }
+    if (tgt && dist(e, tgt) < e.reach + tgt.r){ e.dir = Math.atan2(tgt.y - e.y, tgt.x - e.x); if (e.cd <= 0) e.windup = tgt.kind === 'player' ? .45 : .3; }
+    else { e.dir = Math.PI; moveEnt(e, -e.speed*dt, 0); e.moving = true; }
+    return;
+  }
+  if (e.kind === 'soldier' || e.kind === 'archer'){
+    const tgt = nearestHostile(e, e.aggro || 900);
+    if (!tgt){ if (e.post && dist(e, e.post) > 10) steer(e, e.post.x, e.post.y, e.speed*.8, dt); else if (e.march) { steer(e, e.x + Math.cos(e.march)*40, e.y + Math.sin(e.march)*40, e.speed*.5, dt); } return; }
+    const d = dist(e, tgt);
+    if (e.kind === 'archer'){
+      e.dir = Math.atan2(tgt.y - e.y, tgt.x - e.x);
+      if (d < 150) steer(e, e.x - Math.cos(e.dir)*30, e.y - Math.sin(e.dir)*30, e.speed, dt); else if (d > 300) steer(e, tgt.x, tgt.y, e.speed, dt);
+      if (e.cd <= 0 && d < 340){ e.cd = rnd(1.8, 2.8); shoot(e, tgt); }
+      e.dir = Math.atan2(tgt.y - e.y, tgt.x - e.x); return;
+    }
+    if (e.windup > 0){ e.windup -= dt; e.dir = Math.atan2(tgt.y - e.y, tgt.x - e.x); if (e.windup <= 0) swing(e); return; }
+    if (d > e.reach + tgt.r - 4){ steer(e, tgt.x, tgt.y, e.speed, dt); }
+    else { e.dir = Math.atan2(tgt.y - e.y, tgt.x - e.x); if (e.cd <= 0){ e.windup = tgt.kind === 'player' ? .38 : .2; } }
+  }
+}
+function shoot(e, tgt){ const a = Math.atan2(tgt.y - e.y, tgt.x - e.x) + rnd(-.08,.08); projs.push({ x: e.x, y: e.y - 6, vx: Math.cos(a)*280, vy: Math.sin(a)*280, team: e.team, life: 1.6, src: e }); SFX.swing(); }
+
+/* sluipen: wachters met zichtveld */
+function updateGuard(e, dt){
+  const seeP = !P.dead && !P.hidden && dist(e, P) < 190 && Math.abs(angDiff(e.dir, Math.atan2(P.y - e.y, P.x - e.x))) < .85 && los(e, P);
+  if (e.state === 'hunt'){
+    if (seeP || dist(e, P) < 40) e.lost = 0; else e.lost = (e.lost||0) + dt;
+    if (e.lost > 4 || (P.hidden && dist(e, P) > 40)){ e.state = 'search'; e.sus = .5; e.searchT = 3; return; }
+    const d = dist(e, P);
+    if (e.windup > 0){ e.windup -= dt; e.dir = Math.atan2(P.y - e.y, P.x - e.x); if (e.windup <= 0) swing(e); return; }
+    if (d > e.reach + 6) steer(e, P.x, P.y, e.speed*1.5, dt); else if (e.cd <= 0) e.windup = .4;
+    return;
+  }
+  if (seeP){ e.sus = Math.min(1, (e.sus||0) + dt*(1.6 - dist(e,P)/190) * (P.moving ? 1.3 : .8)); if (e.sus >= 1){ e.state = 'hunt'; e.team = 'p'; SFX.alert(); toast('<b>Gezien!</b> Vlucht of verstop je.'); G.seen = (G.seen||0) + 1; } }
+  else e.sus = Math.max(0, (e.sus||0) - dt*.25);
+  if (e.state === 'search'){ e.searchT -= dt; e.dir += dt*1.6; if (e.searchT <= 0) e.state = 'patrol'; return; }
+  if (e.sus > .35){ e.dir = Math.atan2(P.y - e.y, P.x - e.x); return; }
+  if (e.path){ const w = e.path[e.pi||0]; if (dist(e, w) < 8){ e.pi = ((e.pi||0) + 1) % e.path.length; e.pause = 1.2; } if ((e.pause||0) > 0){ e.pause -= dt; e.dir += Math.sin(time*2)*dt; return; } steer(e, w.x, w.y, e.speed*.7, dt); }
+}
+
+/* ---------- pijlen, pijlenregen, vuur ---------- */
+function updateProjs(dt){
+  for (const p of projs){ p.x += p.vx*dt; p.y += p.vy*dt; p.life -= dt; if (solidAt(p.x, p.y)) p.life = 0;
+    for (const o of ents){ if (o.dead || o.kind === 'ship' || o.team === p.team || o.team === 'n' || dist(o, p) > o.r + 3) continue; damage(o, 1, p.src); p.life = 0; break; } }
+  projs = projs.filter(p => p.life > 0);
+  for (const r of rains){ r.t -= dt; if (r.t <= 0 && !r.done){ r.done = true; for (let i=0;i<14;i++) puff(r.x + rnd(-r.r, r.r)*.8, r.y + rnd(-r.r, r.r)*.8, 'dust', 1); SFX.swing(); if (Math.hypot(P.x - r.x, P.y - r.y) < r.r && !P.hidden) damage(P, 2, null); for (let i=0;i<10;i++) decals.push({ x: r.x + rnd(-r.r, r.r)*.8, y: r.y + rnd(-r.r, r.r)*.8, r: 0, arrow: rnd(0, 6.3), a: .9 }); } }
+  rains = rains.filter(r => r.t > -0.3);
+  for (const f of fires){ if (Math.random() < dt*6) puff(f.x + rnd(-f.r, f.r)*.5, f.y + rnd(-f.r, f.r)*.4, 'ember', 1); if (Math.random() < dt*2) puff(f.x, f.y - 10, 'smoke', 1);
+    if (Math.hypot(P.x - f.x, P.y - f.y) < f.r*.6){ f.hurt = (f.hurt||0) - dt; if (f.hurt <= 0){ f.hurt = .8; damage(P, 1, f); } } }
+}
+
+/* ---------- schepen (Salamis) ---------- */
+function mkShip(o){ return Object.assign({ kind: 'ship', a: 0, v: 0, hp: 2, maxhp: 2, r: 30, team: 'p', hull: '#3a2a3a', deck: '#7a2f4a', oarT: 0, flash: 0, x: 0, y: 0 }, o); }
+function shipPts(s){ const c = Math.cos(s.a), n = Math.sin(s.a); return [-34, 0, 30].map(k => ({ x: s.x + c*k, y: s.y + n*k })); }
+function bow(s){ return { x: s.x + Math.cos(s.a)*60, y: s.y + Math.sin(s.a)*60 }; }
+function shipHitsLand(s, x, y, a){ const c = Math.cos(a), n = Math.sin(a); return [-46, 0, 54].some(k => solidAt(x + c*k, y + n*k)); }
+function updateShip(s, dt, ctrl){
+  if (s.dead){ s.sink = (s.sink||0) + dt; return; }
+  s.oarT += dt * (.5 + Math.abs(s.v)/80);
+  if (ctrl){ const I = inp(); const rot = (kd('KeyA','ArrowLeft') || touch.x < -.4 ? -1 : 0) + (kd('KeyD','ArrowRight') || touch.x > .4 ? 1 : 0);
+    const thr = (kd('KeyW','ArrowUp') || touch.y < -.4) ? 1 : (kd('KeyS','ArrowDown') || touch.y > .4) ? -1 : 0;
+    const boost = I.run && stamina > .05; if (boost && thr > 0) stamina = Math.max(0, stamina - dt*.35); else stamina = Math.min(1, stamina + dt*.15);
+    const vmax = boost ? 220 : 140; s.v += thr * dt * (thr > 0 ? 90 : 120); s.v = clamp(s.v, -40, vmax); if (!thr) s.v *= (1 - dt*.6);
+    if (!boost && s.v > 140) s.v -= dt*80;
+    s.a += rot * dt * (1.1 + Math.min(1, Math.abs(s.v)/100)) * (s.v < 0 ? -1 : 1) * .9;
+    if (I.use) interact();
+  } else shipAI(s, dt);
+  const nx = s.x + Math.cos(s.a)*s.v*dt, ny = s.y + Math.sin(s.a)*s.v*dt;
+  if (shipHitsLand(s, nx, ny, s.a)){ s.v *= -.3; puff(bow(s).x, bow(s).y, 'splash', 6); if (ctrl) SFX.crash(); } else { s.x = nx; s.y = ny; }
+  if (Math.abs(s.v) > 60 && Math.random() < dt*10){ const c = Math.cos(s.a), n = Math.sin(s.a); puff(s.x - c*48, s.y - n*48, 'splash', 1); }
+  /* rammen */
+  if (s.v > 95){ const b = bow(s); for (const o of ents){ if (o === s || o.kind !== 'ship' || o.dead || o.team === s.team) continue; if (shipPts(o).some(p => Math.hypot(p.x - b.x, p.y - b.y) < 18)){ o.hp -= s.v > 170 ? 2 : 1; o.flash = .2; s.v *= .15; puff(b.x, b.y, 'wood', 12); puff(b.x, b.y, 'splash', 8); shake = Math.max(shake, ctrl || o === P ? 10 : 2); if (ctrl || o === P) SFX.crash();
+    if (o === P) { hurtFlash = .4; } if (o.hp <= 0){ o.dead = true; o.sinkT = 0; puff(o.x, o.y, 'wood', 20); if (s === P) G.rammed = (G.rammed||0) + 1; if (o.onDie) o.onDie(o); if (o === P) onPlayerDown(); } break; } } }
+}
+function shipAI(s, dt){
+  const foes = ents.filter(o => o.kind === 'ship' && !o.dead && o.team !== s.team);
+  let tgt = null, bd = 1e9; for (const o of foes){ const d = dist(s, o); if (d < bd){ bd = d; tgt = o; } }
+  let goal = tgt && bd < (s.team === 'p' ? 360 : 700) ? tgt : (s.wp || (s.wp = { x: s.x + rnd(-300, 300), y: s.y + rnd(-200, 200) }));
+  if (!tgt && dist(s, goal) < 60) s.wp = null;
+  const want = Math.atan2(goal.y - s.y, goal.x - s.x); s.a += clamp(angDiff(s.a, want), -1, 1) * dt * (s.team === 'p' ? .6 : 1);
+  const vmax = s.team === 'p' ? (tgt && bd < 220 ? 120 : 70) : (tgt && bd < 260 ? 160 : 100); s.v = lerp(s.v, vmax, dt*.6);
+  const ahead = { x: s.x + Math.cos(s.a)*110, y: s.y + Math.sin(s.a)*110 }; if (solidAt(ahead.x, ahead.y)) { s.a += dt*1.8; s.v *= .97; }
+}
+
+/* ---------- interactie ---------- */
+function nearbyInteract(){
+  let best = null, bd = 56;
+  for (const e of ents){ if (e === P || e.dead || !e.talk) continue; const d = dist(e, P); if (d < bd){ bd = d; best = { label: e.talkLabel || ('Praat met ' + (e.name||'')), f: () => e.talk(e) }; } }
+  for (const v of Z.vps){ if (Math.hypot(v.x - P.x, v.y - P.y) < 44 && !(st.vps||{})[v.id]) best = { label: 'Beklim het uitkijkpunt', f: () => viewpoint(v) }; }
+  for (const p of pickups){ if (!p.got && Math.hypot(p.x - P.x, p.y - P.y) < 38) best = { label: p.label || 'Oprapen', f: () => p.take(p) }; }
+  return best;
+}
+function interact(){ const n = nearbyInteract(); if (n){ SFX.step(); n.f(); } }
+
+/* ================== INTERFACE: dialogen, vragen, filmscènes, dagboek, verslag ================== */
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmtP = n => String(n).replace('.', ',');
+const nm = s => String(s).replace(/\{naam\}/g, esc(st.naam || 'Schaduw'));
+
+/* portretten worden getekend met dezelfde personage-functie */
+const portraitCache = {};
+function portrait(key){
+  if (portraitCache[key]) return portraitCache[key];
+  const c = document.createElement('canvas'); c.width = c.height = 96; const g = c.getContext('2d');
+  g.fillStyle = key === 'glaux' ? '#1d4d52' : key === 'verteller' ? '#3a2f28' : '#e9dcbc'; g.fillRect(0, 0, 96, 96);
+  if (key === 'glaux'){ g.translate(48, 52); g.scale(3, 3); drawOwl(g, 0, 0, 0); }
+  else if (key === 'verteller'){ g.fillStyle = '#e9b04a'; g.font = 'bold 54px Cinzel, serif'; g.textAlign = 'center'; g.fillText('Ω', 48, 66); }
+  else { const L = LOOK[key] || LOOK.athener; g.translate(48, 70); g.scale(3.4, 3.4); drawHuman(g, { x: 0, y: 0, look: L, dir: Math.PI/2, hp: 1, maxhp: 1 }, 0); }
+  return portraitCache[key] = c.toDataURL();
+}
+
+/* ---------- dialoog ---------- */
+let dlgQueue = null;
+function say(lines, cb){
+  G.prevMode = G.mode === 'ui' ? G.prevMode : G.mode; G.mode = 'ui';
+  let i = 0; const box = $('#dlg');
+  const show = () => {
+    const L = lines[i];
+    if (L.choices){
+      box.innerHTML = `<div class="dq">${nm(L.q || 'Wat doe je?')}</div><div class="dch">${L.choices.map((c,k) => `<button class="btn ${c.v?'v':''}" data-k="${k}">${c.v?'<span class="sp sp-v">V+</span> ':''}${nm(c.t)}</button>`).join('')}</div>`;
+      box.classList.add('open');
+      box.querySelectorAll('button').forEach(b => b.onclick = () => { const c = L.choices[+b.dataset.k]; box.classList.remove('open'); if (c.f) c.f(() => { i++; next(); }); else { i++; next(); } });
+      return;
+    }
+    const [who, text, name] = L; const sp = SPK[who] || { n: name || who, p: who };
+    box.innerHTML = `<img class="pt" src="${portrait(sp.p)}" alt=""><div class="dt"><div class="dn">${esc(name || sp.n)}</div><div class="dx">${nm(text)}</div></div><button class="btn dnext">${i < lines.length-1 ? 'Verder' : 'OK'} <span class="kbd">E</span></button>`;
+    box.classList.add('open');
+    box.querySelector('.dnext').onclick = () => { i++; next(); };
+  };
+  const next = () => { if (i >= lines.length){ box.classList.remove('open'); dlgQueue = null; G.mode = G.prevMode && G.prevMode !== 'ui' ? G.prevMode : 'play'; if (cb) cb(); } else show(); };
+  dlgQueue = { adv: () => { const b = box.querySelector('.dnext'); if (b) b.click(); } };
+  show();
+}
+
+/* ---------- vragen (zelfscorend, met hulp en paginaverwijzing) ---------- */
+function ask(ids, cb){
+  ids = [].concat(ids); let k = 0;
+  const run = () => { if (k >= ids.length){ cb && cb(); return; } quiz(ids[k++], run); };
+  run();
+}
+function record(id, pts){ const q = Q[id]; st.log[id] = { pts, label: q.label, page: q.page, act: st.act, v: !!q.v }; save(); }
+function quiz(id, cb){
+  const q = Q[id]; G.prevMode = G.mode === 'ui' ? G.prevMode : G.mode; G.mode = 'ui';
+  const box = $('#quiz'), card = box.querySelector('.qcard');
+  const done = () => { box.classList.remove('open'); G.mode = G.prevMode && G.prevMode !== 'ui' ? G.prevMode : 'play'; cb && cb(); };
+  if (st.log[id]){ cb && setTimeout(() => { G.mode = G.prevMode && G.prevMode !== 'ui' ? G.prevMode : 'play'; cb(); }, 0); return; }
+  let tries = (st.try1||{})[id] ? 1 : 0;
+  const markTry = () => { st.try1 = st.try1 || {}; st.try1[id] = true; save(); };
+  const head = `<div class="qhead"><span class="sp ${q.v?'sp-v':'sp-b'}">${q.v?'V+ verrijking':'Kennis van een historicus'}</span><span class="qpage">${ICO.book} ${q.page}</span></div>${q.src ? srcFig(q.src) : ''}<div class="qq">${nm(q.q)}</div>`;
+  const tail = `<div class="qrow"><button class="hint" id="qh">${ICO.bulb} Tip van Glaux <span class="cost">-3</span></button></div><div id="qfb"></div><div id="qnext"></div>`;
+  const reward = (pts) => { addDr(q.v ? (pts===1?15:8) : (pts===1?10:5)); SFX.good(); SFX.coin(); };
+  const fb = (ok, final) => { const f = $('#qfb'); if (ok){ f.className = 'fb ok'; f.innerHTML = `<b>${pick(['Juist!','Sterk!','Goed gezien!','Scherp, historicus!'])}</b> ${q.uitleg}`; } else if (final){ f.className = 'fb no'; f.innerHTML = `<b>Helaas.</b> Het juiste antwoord staat nu groen. ${q.uitleg}<div class="lwb">${ICO.book} Herhaal in je leerwerkboek: <b>${q.page}</b></div>`; } else { f.className = 'fb no'; f.innerHTML = `<b>Nog niet juist.</b> Je hebt nog één kans. <span class="small">${q.hint}</span><div class="lwb">${ICO.book} Kijk in je leerwerkboek: <b>${q.page}</b></div>`; } };
+  const nextBtn = () => { $('#qnext').innerHTML = `<button class="btn">Verder ${ICO.arrow}</button>`; $('#qnext button').onclick = done; $('#qnext button').focus(); };
+  const bindHint = () => { $('#qh').onclick = () => { if (!(st.hints||{})[id]){ st.hints = st.hints || {}; st.hints[id] = true; addDr(-3); save(); } $('#qh').outerHTML = `<div class="hintbox">${ICO.bulb} <b>Glaux fluistert:</b> ${q.hint}<div class="lwb">${ICO.book} Leerwerkboek: <b>${q.page}</b></div></div>`; }; if ((st.hints||{})[id]) $('#qh').click(); };
+
+  if (q.type === 'mc'){
+    card.innerHTML = head + `<div class="opts">${q.opts.map((o,i) => `<button class="opt" data-i="${i}"><span class="let">${'ABCD'[i]}</span><span>${nm(o)}</span></button>`).join('')}</div>` + tail;
+    bindHint();
+    card.querySelectorAll('.opt').forEach(b => b.onclick = () => { const i = +b.dataset.i;
+      if (i === q.ok){ b.classList.add('good'); const pts = tries ? .5 : 1; record(id, pts); reward(pts); card.querySelectorAll('.opt').forEach(x => x.disabled = true); fb(true); nextBtn(); }
+      else { tries++; markTry(); b.classList.add('wrong'); b.disabled = true; SFX.bad(); addDr(-2); if (tries >= 2){ record(id, 0); card.querySelectorAll('.opt').forEach(x => { x.disabled = true; if (+x.dataset.i === q.ok) x.classList.add('good'); }); fb(false, true); nextBtn(); } else fb(false, false); } });
+  }
+  if (q.type === 'sort'){
+    const items = q.items.map((t,i) => ({ t, k: i })); let order = shuffleA(items); let g = 0; while (order.every((o,i) => o.k === i) && g++ < 9) order = shuffleA(items);
+    card.innerHTML = head + `<ol class="slist" id="sl"></ol><div class="qrow"><button class="btn" id="chk">${ICO.check} Controleer</button></div>` + tail;
+    const draw = lock => { $('#sl').innerHTML = order.map((o,p) => `<li class="sitem ${o.s||''}" data-p="${p}"><span class="num">${p+1}</span><span class="stxt">${o.t}</span><span class="arrows"><button class="ar" data-d="-1" ${lock||p===0?'disabled':''}>${ICO.up}</button><button class="ar" data-d="1" ${lock||p===order.length-1?'disabled':''}>${ICO.down}</button></span></li>`).join('');
+      if (!lock) $('#sl').querySelectorAll('.ar').forEach(b => b.onclick = () => { const p = +b.closest('li').dataset.p, d = +b.dataset.d; [order[p], order[p+d]] = [order[p+d], order[p]]; order.forEach(o => o.s = ''); draw(false); }); };
+    draw(false); bindHint();
+    $('#chk').onclick = () => { const ok = order.every((o,i) => o.k === i);
+      if (ok){ order.forEach(o => o.s = 'good'); draw(true); const pts = tries ? .5 : 1; record(id, pts); reward(pts); $('#chk').remove(); fb(true); nextBtn(); }
+      else { tries++; markTry(); SFX.bad(); addDr(-2); order.forEach((o,i) => o.s = o.k === i ? 'good' : 'wrong'); draw(false);
+        if (tries >= 2){ record(id, 0); order = items.map(o => Object.assign(o, { s: 'good' })); draw(true); $('#chk').remove(); fb(false, true); nextBtn(); } else fb(false, false); } };
+  }
+  if (q.type === 'cat'){
+    const pickd = {};
+    card.innerHTML = head + `<div class="cats">${q.items.map((it,i) => `<div class="crow" data-i="${i}"><span class="ctxt">${it[0]}</span><span class="cbtns">${q.bins.map(b => `<button class="cb" data-k="${b.k}" style="--c:${b.c}">${b.n}</button>`).join('')}</span></div>`).join('')}</div><div class="qrow"><button class="btn" id="chk">${ICO.check} Controleer</button></div>` + tail;
+    bindHint(); const rows = card.querySelectorAll('.crow');
+    rows.forEach(r => r.querySelectorAll('.cb').forEach(b => b.onclick = () => { pickd[+r.dataset.i] = b.dataset.k; r.querySelectorAll('.cb').forEach(x => x.classList.toggle('sel', x === b)); r.classList.remove('good','wrong'); }));
+    const lock = show => rows.forEach(r => r.querySelectorAll('.cb').forEach(b => { b.disabled = true; if (show) b.classList.toggle('sel', b.dataset.k === q.items[+r.dataset.i][1]); }));
+    $('#chk').onclick = () => { if (Object.keys(pickd).length < q.items.length){ const f = $('#qfb'); f.className = 'fb no'; f.innerHTML = 'Kies eerst bij <b>elke</b> regel een antwoord.'; return; }
+      let all = true; rows.forEach(r => { const i = +r.dataset.i, ok = pickd[i] === q.items[i][1]; r.classList.toggle('good', ok); r.classList.toggle('wrong', !ok); if (!ok) all = false; });
+      if (all){ const pts = tries ? .5 : 1; record(id, pts); reward(pts); lock(false); $('#chk').remove(); fb(true); nextBtn(); }
+      else { tries++; markTry(); SFX.bad(); addDr(-2); if (tries >= 2){ record(id, 0); rows.forEach(r => { r.classList.remove('wrong'); r.classList.add('good'); }); lock(true); $('#chk').remove(); fb(false, true); nextBtn(); } else fb(false, false); } };
+  }
+  box.classList.add('open'); card.scrollTop = 0;
+  if (q.src) addSrc(q.src);
+}
+function shuffleA(a){ const b = a.slice(); for (let i=b.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [b[i], b[j]] = [b[j], b[i]]; } return b; }
+
+/* ---------- open vraag ---------- */
+function openQ(id, q, cb){
+  G.prevMode = G.mode; G.mode = 'ui'; const box = $('#quiz'), card = box.querySelector('.qcard');
+  card.innerHTML = `<div class="qhead"><span class="sp sp-o">Open vraag</span><span class="qpage">je leerkracht verbetert dit zelf</span></div><div class="qq">${nm(q)}</div><textarea id="oa" rows="6" placeholder="Typ hier je antwoord...">${esc((st.open||{})[id]||'')}</textarea><div class="qrow"><button class="btn" id="osv">Opslaan en verder ${ICO.arrow}</button><span id="ocnt" class="small"></span></div><div id="qfb"></div>`;
+  box.classList.add('open'); const ta = $('#oa'); const cnt = () => $('#ocnt').textContent = ta.value.trim().split(/\s+/).filter(Boolean).length + ' woorden'; cnt();
+  ta.oninput = () => { st.open = st.open || {}; st.open[id] = ta.value; save(); cnt(); };
+  $('#osv').onclick = () => { if (ta.value.trim().split(/\s+/).filter(Boolean).length < 12){ const f = $('#qfb'); f.className = 'fb no'; f.innerHTML = 'Schrijf wat meer: minstens twee volledige zinnen.'; return; }
+    st.open = st.open || {}; st.open[id] = ta.value.trim(); st.openQ = st.openQ || {}; st.openQ[id] = q.replace(/<[^>]+>/g, ''); save(); box.classList.remove('open'); G.mode = 'play'; cb && cb(); };
+}
+
+/* ---------- filmscène (herinnering laden) ---------- */
+function cut(cards, cb){
+  G.prevMode = G.mode === 'ui' ? G.prevMode : G.mode; G.mode = 'ui'; let i = 0; const box = $('#cut');
+  const show = () => { const c = cards[i];
+    box.innerHTML = `<div class="cutin ${c.dark?'dark':''}"><div class="glline"></div>${c.kop ? `<div class="ckop">${c.kop}</div>` : ''}${c.jaar ? `<div class="cjaar">${c.jaar}</div>` : ''}${c.plaats ? `<div class="cplaats">${c.plaats}</div>` : ''}${c.t ? `<h2>${nm(c.t)}</h2>` : ''}<div class="cp">${nm(c.p||'')}</div>${c.src ? srcFig(c.src) : ''}<button class="btn" id="cnext">${i < cards.length-1 ? 'Verder' : (c.btn || 'Start de herinnering')} ${ICO.arrow}</button></div>`;
+    box.classList.add('open'); if (c.src) addSrc(c.src); if (c.sfx) SFX[c.sfx]();
+    $('#cnext').onclick = () => { i++; if (i >= cards.length){ box.classList.remove('open'); G.mode = 'play'; cb && cb(); } else show(); }; };
+  show();
+}
+
+/* ---------- uitkijkpunt ---------- */
+function viewpoint(v){
+  st.vps = st.vps || {}; st.vps[v.id] = true; save();
+  G.mode = 'vp'; G.vpAnim = { t: 0, v }; zoomTarget = .5; SFX.horn();
+  revealAround(v.x, v.y, 36);
+  setTimeout(() => {
+    const info = VPINFO[v.id];
+    cut([{ kop: 'Uitkijkpunt gesynchroniseerd', t: v.label, p: info.p, src: info.src, btn: 'Spring naar beneden' }], () => {
+      zoomTarget = baseZoom(); G.vpAnim = null;
+      let best = null, bd = 1e9; for (const h of Z.hides){ const d = Math.hypot(h.x - v.x, h.y - v.y); if (d < bd){ bd = d; best = h; } }
+      if (best && bd < 900){ P.x = best.x; P.y = best.y; puff(P.x, P.y, 'dust', 14); toast('Je springt in het hooi. <b>+20 drachmen</b>'); }
+      addDr(20); G.mode = 'play'; const fin = () => { G.mode = 'play'; if (G.onVp) G.onVp(v.id); }; if (info.after) info.after(fin); else fin();
+    });
+  }, 2600);
+}
+
+/* ---------- kleine dingen ---------- */
+function toast(html, ms=2800){ const t = document.createElement('div'); t.className = 'toast'; t.innerHTML = html; $('#toasts').appendChild(t); setTimeout(() => t.classList.add('out'), ms); setTimeout(() => t.remove(), ms + 600); }
+function objective(text, sub){ $('#objt').innerHTML = nm(text); $('#objs').innerHTML = sub || ''; $('#obj').classList.remove('flash'); void $('#obj').offsetWidth; $('#obj').classList.add('flash'); }
+function addDr(n){ st.dr = Math.max(0, (st.dr||0) + n); save(); $('#dr').textContent = st.dr; const b = $('#drbox'); b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop'); if (n){ const f = document.createElement('span'); f.className = 'float ' + (n>0?'plus':'min'); f.textContent = (n>0?'+':'') + n; b.appendChild(f); setTimeout(() => f.remove(), 1100); } }
+function addSrc(k){ st.src = st.src || []; if (!st.src.includes(k)){ st.src.push(k); save(); toast(`${ICO.book} Nieuwe bron in je dagboek: <b>${SRC[k].nr}</b>`); } }
+function srcFig(k){ const s = SRC[k]; return `<figure class="bron" data-k="${k}"><div class="bimg">${s.url ? `<img src="${s.url}" alt="${esc(s.titel)}" onerror="srcFail(this)">` : s.svg()}</div><figcaption>${s.cap}</figcaption></figure>`; }
+function srcFail(img){ const f = img.closest('figure'), s = SRC[f.dataset.k]; f.querySelector('.bimg').innerHTML = s.svg(); f.querySelector('figcaption').innerHTML = s.capSvg || s.cap; }
+function confetti(){ const cols = ['#009BA8','#61C2CB','#94C021','#C3D984','#EE7D22','#E61149']; for (let i=0;i<60;i++){ const c = document.createElement('i'); c.className = 'conf'; c.style.left = Math.random()*100 + 'vw'; c.style.background = cols[i%6]; c.style.animationDelay = Math.random()*.6 + 's'; document.body.appendChild(c); setTimeout(() => c.remove(), 3200); } }
+
+/* ---------- dagboek: missies, bronnen, besturing ---------- */
+function openJournal(tab='missies'){
+  G.prevMode = G.mode; G.mode = 'ui'; const box = $('#journal'), b = box.querySelector('.jbody');
+  const L = Object.values(st.log||{}), basis = L.filter(l => !l.v);
+  const tabs = `<div class="tabs">${['missies','bronnen','besturing'].map(t => `<button class="tab ${t===tab?'on':''}" data-t="${t}">${t[0].toUpperCase()+t.slice(1)}</button>`).join('')}</div>`;
+  let body = '';
+  if (tab === 'missies') body = `<p><b>Score:</b> ${fmtP(basis.reduce((a,l)=>a+l.pts,0))} / ${basis.length} &nbsp; <b>Drachmen:</b> ${st.dr}</p><ol class="acts">${ACTS.map((a,i) => `<li class="${i < (st.act||0) ? 'done' : i === (st.act||0) ? 'now' : ''}"><b>${a.kop}:</b> ${a.t} <span class="small">(${a.les})</span></li>`).join('')}</ol><p class="small">Huidige missie: <b>${$('#objt').innerHTML}</b></p>`;
+  if (tab === 'bronnen') body = `<div class="bookgrid">${(st.src||[]).length ? st.src.map(k => `<div><div class="bnr">${SRC[k].nr} · ${SRC[k].titel}</div>${srcFig(k)}</div>`).join('') : '<p>Nog geen bronnen gevonden.</p>'}</div>`;
+  if (tab === 'besturing') body = `<table class="ctl"><tr><td><span class="kbd">Z Q S D</span> / <span class="kbd">W A S D</span> / pijltjes</td><td>lopen (en roeien met je schip)</td></tr><tr><td><span class="kbd">Shift</span></td><td>sprinten / rammen op topsnelheid</td></tr><tr><td><span class="kbd">Spatie</span> of <span class="kbd">J</span></td><td>aanvallen met je speer</td></tr><tr><td><span class="kbd">E</span></td><td>praten, oprapen, uitkijkpunt beklimmen</td></tr><tr><td><span class="kbd">Tab</span></td><td>dagboek openen</td></tr></table><p class="small">Verstoppen: ga in een struik of hooiwagen staan. Wachters met een rood zichtveld zien je dan niet. Uitkijkpunten (uil op een steen) tonen een groot stuk van de kaart.</p>`;
+  b.innerHTML = tabs + body; box.classList.add('open');
+  b.querySelectorAll('.tab').forEach(t => t.onclick = () => { box.classList.remove('open'); G.mode = G.prevMode; openJournal(t.dataset.t); });
+}
+function closeJournal(){ $('#journal').classList.remove('open'); if (G.mode === 'ui') G.mode = G.prevMode === 'ui' ? 'play' : (G.prevMode || 'play'); }
+
+/* ---------- verslag (pdf + Gmail) ---------- */
+function totals(){ const L = Object.values(st.log||{}), b = L.filter(l => !l.v), v = L.filter(l => l.v); return { bp: b.reduce((a,l)=>a+l.pts,0), bm: b.length, vp: v.reduce((a,l)=>a+l.pts,0), vm: v.length }; }
+function rank(p){ return p >= .85 ? 'Meester-strateeg' : p >= .6 ? 'Hopliet van de geschiedenis' : 'Rekruut'; }
+function makePDF(){
+  if (!window.jspdf){ alert('De pdf-maker kon niet laden (geen internet?). Je krijgt nu een afdrukvenster: kies daar "Opslaan als pdf".'); window.print(); return false; }
+  const { jsPDF } = window.jspdf, d = new jsPDF({ unit: 'mm', format: 'a4' }), W = 210, M = 16; let y = 0;
+  const t = totals(), pct = t.bm ? t.bp/t.bm : 0;
+  const line = (txt, size=10, style='normal', col=[31,43,51], gap=5) => { d.setFont('helvetica', style); d.setFontSize(size); d.setTextColor(...col); d.splitTextToSize(txt, W-2*M).forEach(l => { if (y > 280){ d.addPage(); y = 18; } d.text(l, M, y); y += gap; }); };
+  d.setFillColor(0,155,168); d.rect(0, 0, W, 30, 'F'); d.setFillColor(230,17,73); d.rect(0, 30, W, 2, 'F');
+  d.setTextColor(255,255,255); d.setFont('helvetica','bold'); d.setFontSize(20); d.text('POLIS: Schaduw van Hellas', M, 14); d.setFontSize(10); d.setFont('helvetica','normal'); d.text('Verslag geschiedenis 2A  |  Les 4 en Les 5 (leerwerkboek p. 29-39)', M, 22);
+  y = 42; line(`Naam: ${st.naam}`, 12, 'bold'); line(`Klas: ${st.klas}`, 11); line(`Afgewerkt op: ${new Date().toLocaleDateString('nl-BE')}  |  Speeltijd: ${Math.max(1, Math.round((st.playT||0)/60))} minuten`, 10);
+  y += 2; d.setDrawColor(195,217,132); d.setLineWidth(.6); d.line(M, y, W-M, y); y += 7;
+  line(`Score basis (automatisch verbeterd): ${fmtP(t.bp)} / ${t.bm}  (${Math.round(pct*100)}%)`, 12, 'bold', [0,120,130], 6);
+  line(`Score V+ verrijking: ${fmtP(t.vp)} / ${t.vm}  |  Drachmen: ${st.dr}  |  Titel: ${rank(pct)}  |  Bronnen: ${(st.src||[]).length}`, 10);
+  line(`Keuzes: ${(st.flags||{}).heloot === 'help' ? 'hielp de heloot' : 'hielp de heloot niet'}  |  gestemd: ${(st.flags||{}).stem || '-'}  |  keer gezien bij het sluipen: ${st.seen||0}`, 10);
+  line('Puntentelling: juist bij de eerste poging = 1, bij de tweede poging = 0,5, daarna = 0.', 8.5, 'italic', [110,110,110]);
+  y += 3;
+  ACTS.forEach((a, ai) => { const rows = Object.values(st.log||{}).filter(l => l.act === ai); if (!rows.length) return; if (y > 262){ d.addPage(); y = 18; }
+    d.setFillColor(241,230,200); d.rect(M, y-4.5, W-2*M, 7, 'F'); line(`${a.kop}: ${a.t}  (${a.les})`, 10.5, 'bold', [31,43,51], 6.5);
+    rows.forEach(l => { if (y > 280){ d.addPage(); y = 18; } d.setFont('helvetica','normal'); d.setFontSize(9.5); d.setTextColor(l.pts===1?60:200, l.pts===1?110:40, l.pts===1?40:60); d.text(`${fmtP(l.pts)} / 1`, W-M, y, { align: 'right' }); d.setTextColor(31,43,51); d.text(d.splitTextToSize(`${l.v?'[V+] ':''}${l.label}  (${l.page})`, W-2*M-22)[0], M+2, y); y += 5; }); y += 2; });
+  const weak = Object.values(st.log||{}).filter(l => l.pts < 1 && !l.v);
+  if (weak.length){ y += 2; line('Remediëring: deze onderdelen herhaalt de leerling best', 11, 'bold', [230,17,73], 6); weak.forEach(l => line(`- ${l.label}: leerwerkboek ${l.page}`, 9.5)); }
+  d.addPage(); y = 20; line('Open vragen (te verbeteren door de leerkracht)', 13, 'bold', [0,120,130], 7);
+  ['open1','open2'].forEach((k, i) => { y += 3; line(`Vraag ${i+1}: ${(st.openQ||{})[k] || ''}`, 10, 'bold'); y += 1; line((st.open||{})[k] || '(niet ingevuld)', 10.5, 'normal', [31,43,51], 5.6); y += 2; line('Score: ...... / 2', 10, 'bold', [120,120,120]); });
+  d.setFontSize(8); d.setTextColor(140,140,140); d.text('POLIS: Schaduw van Hellas  |  Middenschool Heilig Hart Bree  |  geschiedenis 2A', M, 290);
+  d.save(`POLIS_${String(st.naam).replace(/[^\w\- ]+/g,'').replace(/\s+/g,'_')}_${st.klas}.pdf`); return true;
+}
+function openMail(){ const su = `POLIS - ${st.naam} - ${st.klas}`, body = `Dag ${CONFIG.leerkracht},\n\nIn bijlage vindt u mijn verslag van POLIS: Schaduw van Hellas.\n\n(Vergeet de pdf niet toe te voegen als bijlage!)\n\n${st.naam}, ${st.klas}`; window.open('https://mail.google.com/mail/?view=cm&fs=1&to=' + encodeURIComponent(CONFIG.mail) + '&su=' + encodeURIComponent(su) + '&body=' + encodeURIComponent(body), '_blank'); }
+
+const ICO = {
+  book:'<svg viewBox="0 0 24 24" width="16" height="16"><path d="M3 5c3-1.5 6-1.5 9 0v14c-3-1.5-6-1.5-9 0zM21 5c-3-1.5-6-1.5-9 0v14c3-1.5 6-1.5 9 0z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>',
+  bulb:'<svg viewBox="0 0 24 24" width="17" height="17"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.8.8 1 1.5 1 2.5h6c0-1 .2-1.7 1-2.5A6 6 0 0 0 12 3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+  up:'<svg viewBox="0 0 24 24" width="18" height="18"><path d="M6 15l6-6 6 6" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>',
+  down:'<svg viewBox="0 0 24 24" width="18" height="18"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>',
+  check:'<svg viewBox="0 0 24 24" width="18" height="18"><path d="M5 12l5 5 9-10" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>',
+  arrow:'<svg viewBox="0 0 24 24" width="18" height="18"><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>',
+  coin:'<svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="10" fill="#e9b04a" stroke="#b5832a" stroke-width="2"/><text x="12" y="16.5" text-anchor="middle" font-size="12" font-weight="800" fill="#7a5418" font-family="serif">Δ</text></svg>',
+  sound:'<svg viewBox="0 0 24 24" width="18" height="18"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 8a5 5 0 0 1 0 8" fill="none" stroke="currentColor" stroke-width="2"/></svg>',
+  mute:'<svg viewBox="0 0 24 24" width="18" height="18"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 9l5 6M21 9l-5 6" stroke="currentColor" stroke-width="2"/></svg>'
+};
+
+/* ================== VERHAAL, MISSIES EN VRAGEN ==================
+   Leerstof: leerwerkboek trimester 1, Les 4 en Les 5 (p. 29-39).
+   Elke vraag verwijst naar de juiste les en bladzijden.            */
+
+const SPK = {
+  glaux:{n:'Glaux',p:'glaux'}, verteller:{n:'Herinnering',p:'verteller'}, ik:{n:'Jij',p:'hero'},
+  miltiades:{n:'Miltiades, strateeg',p:'strateeg'}, kallias:{n:'Kallias, rijke burger',p:'elite'}, sostratos:{n:'Sostratos, migrant',p:'metoik'},
+  daos:{n:'Daos, slaaf',p:'slaaf'}, agariste:{n:'Agariste',p:'vrouw'}, magistraat:{n:'Magistraat',p:'oude'},
+  heloot:{n:'Heloot',p:'heloot'}, trainer:{n:'Trainer van de agogè',p:'spartaan'}, jongen:{n:'Spartaanse jongen',p:'jongen'},
+  oudste:{n:'Lid van de gerousia',p:'oude'}, koning:{n:'Koning van Sparta',p:'koning'}, leonidas:{n:'Leonidas, koning van Sparta',p:'koning'},
+  hopliet:{n:'Hopliet',p:'hopliet'}, themistokles:{n:'Themistokles, strateeg',p:'strateeg'}, philon:{n:'Grootvader Philon',p:'oude'},
+  melissa:{n:'Melissa',p:'vrouw'}, timon:{n:'Timon',p:'kind'}, perikles:{n:'Perikles, strateeg',p:'strateeg'}, naxier:{n:'Handelaar uit Naxos',p:'metoik'},
+  gezant:{n:'Spartaanse gezant',p:'spartaan'}, demosthenes:{n:'Demosthenes, redenaar',p:'elite'}, thebaan:{n:'Thebaanse hopliet',p:'thebaan'}
+};
+
+const ACTS = [
+  { kop:'Herinnering 1', t:'Athene: de stem van het volk', les:'Les 4 deel 1 en 2', jaar:'490 v.C.' },
+  { kop:'Herinnering 2', t:'Sparta: de stad zonder muren', les:'Les 4 deel 3 en 4', jaar:'490 v.C.' },
+  { kop:'Herinnering 3', t:'De vlakte van Marathon', les:'Les 5 deel 1', jaar:'490 v.C.' },
+  { kop:'Herinnering 4', t:'Het jaar van vuur: Thermopylae, Athene en Salamis', les:'Les 5 deel 1 en 2', jaar:'480 v.C.' },
+  { kop:'Herinnering 5', t:'Broeders worden vijanden', les:'Les 4 deel 5 en Les 5 deel 2', jaar:'432 tot 431 v.C.' },
+  { kop:'Herinnering 6', t:'Chaeronea: het einde van de vrijheid', les:'Les 5 deel 3', jaar:'338 v.C.' }
+];
+
+const L4 = 'Les 4, p. 29-34', L5 = 'Les 5, p. 35-39';
+const Q = {
+  a_burger:{type:'mc', label:'Wie was Atheens burger?', page:'Les 4 deel 1, p. 29-34', q:'Wie werd in Athene <b>burger</b>?', opts:['iedere inwoner van Athene','vrije mannen vanaf 18 jaar, geboren uit Atheense ouders','alle mannen en vrouwen boven 18 jaar','iedereen die belastingen betaalt'], ok:1, hint:'Kallias zei het net: geslacht, leeftijd en afkomst tellen mee.', uitleg:'Atheense burgers waren vrije mannen vanaf 18 jaar die geboren waren uit Atheense ouders. Alleen zij hadden burgerrechten.'},
+  a_metoik:{type:'mc', label:'Rechten en plichten van migranten', page:'Les 4 deel 1, p. 29-34', q:'Sostratos is een <b>migrant</b>. Wat klopt over zijn rechten en plichten?', opts:['Hij is onvrij en eigendom van de polis.','Hij is vrij, maar mag geen huis of grond bezitten en betaalt extra belastingen.','Hij heeft dezelfde rechten als een burger.','Hij mag meestemmen in de Volksvergadering.'], ok:1, hint:'Migranten waren tweederangsinwoners: vrij, maar met minder rechten en meer plichten.', uitleg:'Migranten en hun afstammelingen waren vrij, maar hadden minder rechten en meer plichten dan burgers: geen huizen of gronden, extra belastingen. Ze werkten meestal als ambachtslui of handelaars.'},
+  a_slaaf:{type:'mc', label:'Slaven in Athene', page:'Les 4 deel 1, p. 29-34', q:'Wat was een <b>slaaf</b> in Athene?', opts:['een onvrije mens, eigendom van vrije mensen of van de polis, met amper rechten','een arme burger','een migrant zonder werk','een hopliet in het leger'], ok:0, hint:'Daos is niet vrij. Van wie is hij?', uitleg:'Slaven waren onvrij en eigendom van vrije mensen of van de polis. Ze waren rechteloos, maar wel essentieel voor de economie: de grootste groep werkkrachten.'},
+  a_vrouw:{type:'mc', label:'De rol van vrouwen', page:'Les 4 deel 1, p. 29-34', q:'Welke rol hadden <b>vrouwen</b> in Athene?', opts:['Ze leidden het huishouden en hadden geen stem in het publieke leven.','Ze bestuurden samen met de mannen de polis.','Ze werden op hun 18de burger met stemrecht.','Ze waren de strategen van het leger.'], ok:0, hint:'Waar ontmoette je Agariste? Op de Pnyx of thuis?', uitleg:'Vrouwen, ook die van burgerlijke afkomst, leidden het huishouden en hadden geen stem in het publieke leven. De Atheense samenleving was patriarchaal: een mannenmaatschappij.'},
+  a_stand:{type:'mc', label:'Standenmaatschappij', page:'Les 4 deel 1, p. 29-34', q:'Je plaats in Athene hing af van geboorte, geslacht, leeftijd, afkomst en grondbezit. Hoe noem je zo\'n samenleving?', opts:['een democratie','een standenmaatschappij','een gesloten landbouwsamenleving','een oligarchie'], ok:1, hint:'Niet iedereen is gelijk: er zijn verschillende "standen".', uitleg:'Athene was een standenmaatschappij: niet iedereen was gelijk. Er waren vrijen en onvrijen, en ook tussen de vrijen waren er grote verschillen.'},
+  a_bestuur:{type:'sort', label:'Evolutie van de bestuursvorm in Athene', page:'Les 4 deel 2, p. 29-34', q:'Zet de bestuursvormen van Athene in de juiste volgorde: de oudste bovenaan.', items:['monarchie: een koning heeft alle macht','aristocratie: rijke grootgrondbezitters nemen de macht (8ste eeuw v.C.)','alle rijke burgers krijgen inspraak (6de eeuw v.C.)','democratie: alle burgers beslissen mee (vanaf 508 v.C.)'], hint:'Het begint met één persoon aan de macht en eindigt met het volk.', uitleg:'Monarchie, daarna aristocratie, daarna inspraak voor alle rijke burgers (om sociale spanningen te vermijden) en in 508 v.C. de democratie.'},
+  a_stem:{type:'mc', label:'Wie stemt in de Volksvergadering?', page:'Les 4 deel 2, p. 29-34', q:'Wie mocht meestemmen in de <b>Volksvergadering</b> op de Pnyx?', opts:['alle inwoners van Athene','alleen de rijke elite','alle burgers, rijk en arm','alleen de strategen'], ok:2, hint:'Sinds 508 v.C. worden alle burgers betrokken in de politiek.', uitleg:'Alle burgers, rijk en arm (ca. 35 000), maakten deel uit van de Volksvergadering. Daar bespraken en stemden ze wetten. Vrouwen, migranten en slaven waren uitgesloten.'},
+  a_machten:{type:'cat', label:'De drie machten in de Atheense democratie', page:'Les 4 deel 2, p. 29-34 (schema)', q:'Bij welke <b>macht</b> hoort elk bestuursorgaan?', bins:[{k:'W',n:'Wetgevend',c:'#009BA8'},{k:'U',n:'Uitvoerend',c:'#EE7D22'},{k:'R',n:'Rechterlijk',c:'#E61149'}], items:[['De Volksvergadering bespreekt en stemt wetten','W'],['De Raad van 500 bereidt de Volksvergadering voor','W'],['De magistraten voeren de besluiten uit','U'],['De tien strategen leiden het leger','U'],['De Volksrechtbank spreekt recht en straft','R']], hint:'Wetgevend maakt wetten, uitvoerend voert ze uit, rechterlijk controleert en straft.', uitleg:'Volksvergadering en Raad van 500: wetgevend. Magistraten (met de strategen aan de top): uitvoerend. Volksrechtbank: rechterlijk. Zo ligt de macht niet bij één persoon: scheiding der machten.'},
+  a_loting:{type:'mc', src:'klero', label:'Loting', page:'Les 4 deel 2, p. 29-34', q:'Met deze stenen machine werden namen getrokken. Hoe werden de meeste <b>magistraten</b> en de leden van de Volksrechtbank aangeduid?', opts:['door loting','door verkiezingen','door de koning','door geboorte in een rijke familie'], ok:0, hint:'De machine heet een klèrotèrion: een lotingsmachine.', uitleg:'Elk jaar werden burgers door loting aangeduid voor openbare functies. Alleen de strategen, de top van de magistraten, werden verkozen door de Volksvergadering.'},
+  a_ostra:{type:'mc', src:'ostrakon', label:'Ostracisme (schervengericht)', page:'Les 4 deel 2, p. 29-34', q:'Waarom hielden de Atheners een <b>ostracisme</b>?', opts:['om belastingen te innen','om iemand die te veel macht naar zich toe trok voor tien jaar te verbannen en zo de democratie te beschermen','om nieuwe burgers te kiezen','om slaven vrij te laten'], ok:1, hint:'Wat doe je met iemand die tiran wil worden?', uitleg:'Om machtsmisbruik te voorkomen voerde elke magistraat zijn taak maar één jaar uit. Trok iemand toch te veel macht naar zich toe, dan kon hij via een ostracisme voor tien jaar uit Athene verbannen worden.'},
+  a_vbe:{type:'mc', v:true, label:'V+ Athene en België vergelijken', page:'Les 4 deel 2 + V+ in Classroom', q:'Vergelijk de Atheense democratie met de Belgische. Wat is een groot verschil?', opts:['In Athene beslisten de burgers zelf (directe democratie), in België kiezen we vertegenwoordigers (indirecte democratie).','België heeft geen verkiezingen.','In Athene mochten vrouwen stemmen, in België niet.','Er is geen enkel verschil.'], ok:0, hint:'Ga jij zelf in het parlement over elke wet stemmen?', uitleg:'Athene had een directe democratie, België een indirecte: wij kiezen vertegenwoordigers. En in België mogen ook vrouwen stemmen, iets wat in Athene ondenkbaar was.'},
+
+  b_ligging:{type:'mc', label:'De ligging van Sparta', page:'Les 4 deel 3, p. 29-34', q:'Waarom had Sparta weinig economische contacten met andere poleis en overzeese gebieden?', opts:['Het lag in een vallei omsloten door het Taygetosgebergte, zonder directe toegang tot de zee.','Het lag op een eiland.','De Spartanen spraken geen Grieks.','Sparta had een verbod op reizen.'], ok:0, hint:'Denk aan wat je zag vanaf het uitkijkpunt.', uitleg:'Sparta was een gesloten continentale polis met een gesloten landbouweconomie: een vruchtbare vallei, omsloten door bergen, zonder directe toegang tot de zee.'},
+  b_heloot:{type:'mc', label:'De heloten', page:'Les 4 deel 3, p. 29-34', q:'Wie waren de <b>heloten</b>?', opts:['de Spartaanse koningen','de slaven van Sparta, die de gronden van de Spartanen bewerkten','migranten uit Athene','de leden van de raad van ouderen'], ok:1, hint:'Je sprak er net een op de akkers.', uitleg:'Heloten waren de Spartaanse slaven. Zij werkten op de gronden van de Spartanen, die zelf maar één beroep hadden: soldaat.'},
+  b_militair:{type:'mc', label:'Militaristische staat', page:'Les 4 deel 3, p. 29-34', q:'Waarom had Sparta zo\'n sterk leger nodig?', opts:['om de grote groep heloten te onderdrukken en omliggende landbouwgronden te veroveren','om handel te drijven overzee','om de Olympische Spelen te winnen','om tempels te bouwen'], ok:0, hint:'Wie zou er in opstand kunnen komen?', uitleg:'Een sterk leger was nodig om de grote groep heloten te onderdrukken en om gronden te veroveren. Daarom was Sparta een militaristische staat: de hele samenleving was gericht op oorlog voeren.'},
+  b_opvoeding:{type:'mc', label:'De Spartaanse opvoeding', page:'Les 4 deel 3, p. 29-34', q:'Wat weten historici met zekerheid over de Spartaanse <b>opvoeding</b>?', opts:['Kinderen werden jong uit hun gezin gehaald en in groepen opgeleid door de staat, met fysieke training én muziek en poëzie.','Kinderen bleven thuis tot hun 18de.','Er was alleen fysieke training, nooit muziek of poëzie.','Alleen meisjes kregen een opleiding.'], ok:0, hint:'Luister nog eens naar de trainer: niet alleen spieren.', uitleg:'Historici zijn het eens dat Spartaanse kinderen jong uit hun gezin werden gehaald en in groepen door de staat werden opgeleid. Naast fysieke training was er ook ruimte voor muziek en poëzie.'},
+  b_olig:{type:'mc', label:'Oligarchie in Sparta', page:'Les 4 deel 3, p. 29-34', q:'In Sparta zijn de twee koningen vooral legeraanvoerders. De politieke macht ligt bij de gerousia, een raad van 28 ouderen. Welke bestuursvorm is dat?', opts:['monarchie','democratie','oligarchie','tirannie'], ok:2, hint:'Een kleine groep mensen regeert.', uitleg:'Een oligarchie: de macht ligt bij een kleine groep mensen, hier de raad van ouderen.'},
+  b_bron:{type:'mc', src:'plutarchus', label:'Bronnenkritiek: Plutarchus over Sparta', page:'Les 4 deel 4, p. 29-34', q:'Deze bron over de harde Spartaanse opvoeding werd geschreven door Plutarchus, rond 100 n.C. Waarom moet je als historicus <b>voorzichtig</b> zijn?', opts:['Hij schreef meer dan 500 jaar later en was zelf geen Spartaan. Eén bron is geen bron: je moet vergelijken.','Omdat de bron in het Grieks geschreven is.','Plutarchus was een Perzische koning.','Er is geen reden: een oude bron is altijd betrouwbaar.'], ok:0, hint:'Kijk naar het jaartal: wanneer schreef hij, en over welke periode?', uitleg:'Betrouwbaarheid: Plutarchus schreef eeuwen later en niet als Spartaan. Representativiteit: één bron is geen bron, je hebt er meerdere nodig om te weten wat typisch was.'},
+  b_v300:{type:'mc', v:true, label:'V+ De film 300 en ons beeld van Sparta', page:'Les 4 deel 4 en Les 1 deel 1', q:'In de film <i>300</i> (2006) zijn Spartanen onverslaanbare superhelden. Met welk doel verwijst zo\'n film naar het verleden?', opts:['om te ontspannen en spektakel te tonen, waardoor er onjuiste beeldvorming in sluipt','om een betrouwbaar historisch werk te maken','omdat er geen bronnen zijn','om de Perzen correct voor te stellen'], ok:0, hint:'Denk aan Les 1: populaire media.', uitleg:'Films en games willen vooral ontspannen. Daardoor geven ze vaak een vertekend beeld van het verleden, ook van Sparta en de Perzen.'},
+
+  c_oorzaak:{type:'mc', label:'Waarom oorlog met de Perzen?', page:'Les 5 deel 1, p. 35-39', q:'Waarom botsten de Griekse poleis en het Perzische rijk?', opts:['om de controle over kustgebieden, handelsroutes en grondstoffen','omdat de Perzen de Olympische Spelen wilden','omdat Sparta Perzië aanviel','enkel om godsdienstige redenen'], ok:0, hint:'Denk aan de handel van de open landbouwsamenleving (Les 2).', uitleg:'De Griekse poleis en het Perzische rijk botsten aan de westkust van Klein-Azië. De controle over kustgebieden, handelsroutes en grondstoffen speelde mee.'},
+  c_ionisch:{type:'mc', label:'De Ionische Opstand', page:'Les 5 deel 1, p. 35-39', q:'De oorlog begon na de <b>Ionische Opstand</b> (499 tot 493 v.C.). Waar speelde die zich af?', opts:['in de Griekse steden aan de westkust van Klein-Azië','in Sparta','op Sicilië','in Egypte'], ok:0, hint:'Miltiades wees naar het oosten, over de zee.', uitleg:'De Griekse steden aan de westkust van Klein-Azië kwamen in opstand tegen de Perzen, met hulp van Athene. Daarna wilde de Perzische koning wraak.'},
+  c_helm:{type:'mc', src:'helm', label:'Bron B4: de helm van Miltiades', page:'Herhaling 1, p. 5-6', q:'Na de slag schenkt Miltiades zijn helm aan Zeus in Olympia. Archeologen vonden hem terug. Wat voor <b>bron</b> is die helm?', opts:['een materiële (archeologische) en primaire bron','een geschreven en secundaire bron','een monumentale bron','een secundair werk'], ok:0, hint:'Het is een voorwerp uit de tijd zelf.', uitleg:'Een opgegraven voorwerp uit de tijd zelf: een materiële (archeologische) en primaire bron.'},
+
+  d_solid:{type:'mc', label:'Solidariteit tegen de Perzen', page:'Les 4 deel 5 en Les 5 deel 2', q:'Spartanen, Thespiërs, Thebanen en vele anderen vechten hier samen tegen de Perzen. Hoe noem je dat?', opts:['rivaliteit','solidariteit','oligarchie','tirannie'], ok:1, hint:'Bij een externe dreiging zoeken de poleis steun bij elkaar.', uitleg:'Bij externe dreiging werkten de poleis samen: solidariteit. Elke polis had wel haar eigen bestuur.'},
+  d_thermo:{type:'mc', label:'Waarom Thermopylae verloren ging', page:'Les 5 deel 1, p. 35-39', q:'Waarom verloren de Grieken bij Thermopylae toch?', opts:['Volgens Herodotus toonde een Griek de Perzen een bergpad, zodat ze de Grieken konden omsingelen.','De Grieken liepen weg.','Het begon te sneeuwen.','De Spartanen vochten voor de Perzen.'], ok:0, hint:'Van waar kwamen de laatste vijanden?', uitleg:'Volgens de Griekse geschiedschrijver Herodotus wees een verrader de Perzen een pad over de bergen. Zo werden de Grieken langs twee kanten aangevallen.'},
+  d_300:{type:'mc', label:'Het beeld van de 300', page:'Les 5 deel 1 en 2 (beeldvorming)', q:'Het bekende verhaal spreekt van "de 300 Spartanen". Wat klopt er niet aan dat beeld?', opts:['Er vochten ook enkele duizenden andere Grieken mee. Op het einde bleven er vooral Spartanen, Thespiërs en Thebanen over.','Er waren helemaal geen Spartanen.','Thermopylae ligt in Egypte.','De slag vond plaats in 338 v.C.'], ok:0, hint:'Wie stond er naast jou in de pas?', uitleg:'Het "300"-verhaal maakt van Sparta de enige held. In werkelijkheid vochten duizenden Grieken uit verschillende poleis samen. Kritisch kijken naar zo\'n beeld is werk voor een historicus.'},
+  d_brand:{type:'mc', label:'Athene in 480 v.C.', page:'Les 5 deel 1, p. 35-39', q:'Wat gebeurde er in 480 v.C. met Athene?', opts:['De stad werd door de Perzen geplunderd en in brand gestoken.','Athene werd een monarchie.','Athene won de Olympische Spelen.','De stad werd door Sparta veroverd.'], ok:0, hint:'Je zag het met eigen ogen.', uitleg:'In 480 v.C. werd Athene geplunderd en in brand gestoken. De meeste Atheners waren op tijd gevlucht, onder meer naar het eiland Salamis.'},
+  d_salamis:{type:'mc', src:'trireme', label:'De zeeslag bij Salamis', page:'Les 5 deel 1, p. 35-39', q:'Waarom konden de Grieken bij Salamis winnen tegen een veel grotere Perzische vloot?', opts:['In de smalle zeestraat konden de vele Perzische schepen niet goed manoeuvreren. De Griekse triremen ramden ze.','De Perzen hadden geen schepen.','Het was windstil, dus de Perzen konden niet varen.','Sparta stuurde duizend schepen.'], ok:0, hint:'Hoe breed was het water waar je vocht?', uitleg:'Themistokles lokte de Perzische vloot in de smalle zeestraat bij Salamis. Daar zaten de grote schepen elkaar in de weg en konden de Griekse triremen ze rammen.'},
+  d_chrono:{type:'sort', label:'Verloop van de Perzische Oorlogen', page:'Les 5 deel 1, p. 35-39', q:'Zet het verloop van de Perzische Oorlogen in de juiste volgorde: het oudste bovenaan.', items:['Ionische Opstand (499 tot 493 v.C.)','slag bij Marathon (490 v.C.)','slag bij Thermopylae (480 v.C.)','Athene geplunderd en in brand (480 v.C.)','zeeslag bij Salamis (480 v.C.)','de vrede van Callias'], hint:'Je hebt het allemaal zelf beleefd, in deze volgorde.', uitleg:'Ionische Opstand, Marathon, Thermopylae, Athene in brand, Salamis. Daarna volgen nog Griekse overwinningen. De vrede van Callias wordt traditioneel als einde genoemd, al discussiëren historici over hoe formeel dat verdrag was.'},
+  d_wijzij:{type:'mc', label:'Het "wij tegen zij"-beeld', page:'Les 5 deel 2, p. 35-39', q:'Na de oorlogen zagen Grieken zichzelf als "vrij" en de Perzen als "slaven van één alleenheerser". Hoe kijkt een historicus naar zo\'n beeld?', opts:['kritisch: het is beeldvorming die een volk eenzijdig voorstelt en later opnieuw gebruikt werd','als de enige waarheid','als een betrouwbare primaire bron over alle Perzen','het is niet belangrijk'], ok:0, hint:'Wie vertelt het verhaal hier, de Grieken of de Perzen?', uitleg:'Het "wij tegen zij"-denken is historische beeldvorming. Het werd later opnieuw gebruikt om volkeren uit het Oosten als tegenstander voor te stellen. Daarom bekijk je het kritisch.'},
+
+  e_bond:{type:'mc', label:'Het bondgenootschap', page:'Les 4 deel 5, p. 29-34', q:'Na de Perzische Oorlogen sluiten veel poleis een <b>bondgenootschap</b> met Athene. Wat is dat?', opts:['een afspraak tussen staten of poleis om elkaar te helpen','een Griekse munt','een tempel voor Athena','een soort toneelstuk'], ok:0, hint:'Bond-genoot: iemand die met jou verbonden is.', uitleg:'Een bondgenootschap is een samenwerkingsverband tussen staten of poleis, vooral tijdens een oorlog. Athene stond aan het hoofd ervan.'},
+  e_macht:{type:'mc', label:'Hoe Athene zijn macht toonde', page:'Les 4 deel 5, p. 29-34', q:'Athene groeit in de 5de eeuw v.C. uit tot een economische, culturele en militaire macht. Hoe zie je dat in de stad?', opts:['aan de schitterende gebouwen op de Akropolis, zoals het Parthenon','aan de afgebroken tempels','aan een muur rond Sparta','aan het verdwijnen van het leger'], ok:0, hint:'Kijk eens omhoog naar de Akropolis.', uitleg:'De macht van Athene kwam tot uiting in de schitterende gebouwen op de Akropolis, gebouwd na de verwoesting door de Perzen.'},
+  e_rival:{type:'mc', label:'Waarom de spanning groeide', page:'Les 5 deel 2, p. 35-39', q:'Waarom groeide de spanning tussen Athene en andere poleis, zoals Sparta?', opts:['Athene misbruikte zijn macht in het bondgenootschap en de bondgenootschappen beconcurreerden elkaar.','Athene werd een oligarchie.','Sparta wilde de democratie invoeren.','Ze spraken een andere taal.'], ok:0, hint:'Wat vertelde de handelaar uit Naxos?', uitleg:'Het machtsmisbruik van Athene en de concurrentie tussen de bondgenootschappen zorgden opnieuw voor rivaliteit, vooral tussen Athene en Sparta.'},
+  e_verh:{type:'cat', label:'Solidariteit of rivaliteit?', page:'Les 4 deel 5 en Les 5 deel 2', q:'Is elke situatie een voorbeeld van <b>solidariteit</b> of van <b>rivaliteit</b>?', bins:[{k:'S',n:'Solidariteit',c:'#94C021'},{k:'R',n:'Rivaliteit',c:'#E61149'}], items:[['Grieken uit veel poleis vechten samen bij Thermopylae','S'],['Athene en Sparta voeren jarenlang oorlog','R'],['Poleis sluiten een bondgenootschap tegen de Perzen','S'],['Athene dwingt bondgenoten om te blijven betalen','R'],['Spartanen branden de akkers rond Athene plat','R']], hint:'Solidariteit: steun zoeken bij elkaar. Rivaliteit: strijd om macht en invloed.', uitleg:'Bij een gemeenschappelijke vijand: solidariteit. Zodra die weg was, kwam de strijd om macht terug: rivaliteit. Griekenland werd jarenlang geteisterd door interne oorlogen.'},
+
+  f_phil:{type:'mc', label:'Philippos van Makedonië', page:'Les 5 deel 3, p. 35-39', q:'Wie was <b>Philippos</b>?', opts:['de koning van Makedonië, die profiteerde van de verdeeldheid tussen de Griekse poleis','een Atheense strateeg','een Perzische koning','een Spartaanse heloot'], ok:0, hint:'Demosthenes waarschuwde ervoor: de koning uit het noorden.', uitleg:'Philippos was koning van Makedonië. Terwijl Athene en Sparta elkaar bestreden, bouwde hij een sterk leger uit en profiteerde hij van de verdeeldheid.'},
+  f_falanx:{type:'mc', label:'De falanx', page:'Les 5 deel 3, p. 35-39', q:'Wat is een <b>falanx</b>?', opts:['een gesloten gevechtsformatie van soldaten die in rijen naast en achter elkaar vechten','een Grieks schip','een geneesoord','een soort munt'], ok:0, hint:'Denk aan de muur van speren die op je afkwam.', uitleg:'Een falanx is een gesloten gevechtsformatie. De Makedonische falanx had extra lange speren, zodat de vijand niet dichtbij kon komen.'},
+  f_beroeps:{type:'mc', label:'Het beroepsleger', page:'Les 5 deel 3, p. 35-39', q:'Philippos had een <b>beroepsleger</b>. Wat betekent dat?', opts:['een leger van soldaten die oorlog voeren als beroep','een leger van boeren die na de oogst vechten','een leger zonder wapens','een vloot van handelsschepen'], ok:0, hint:'Oorlog voeren is hun job.', uitleg:'Een beroepsleger bestaat uit soldaten die oorlog voeren als beroep. Ze trainen het hele jaar.'},
+  f_oorzgev:{type:'cat', label:'Oorzaken en gevolgen van het einde van de onafhankelijkheid', page:'Les 5 deel 3 (schema), p. 35-39', q:'Is elk element een <b>oorzaak</b> of een <b>gevolg</b> van de nederlaag?', bins:[{k:'O',n:'Oorzaak',c:'#009BA8'},{k:'G',n:'Gevolg',c:'#EE7D22'}], items:[['De Griekse poleis zijn politiek verdeeld','O'],['Onderlinge oorlogen verzwakken de poleis','O'],['Makedonië is een politieke eenheid met een sterk leger','O'],['De Griekse poleis zijn niet langer onafhankelijk','G'],['Er ontstaat een groot Makedonisch koninkrijk','G']], hint:'Bekijk het schema "het einde van de onafhankelijkheid" in je leerwerkboek.', uitleg:'Verdeelde, verzwakte poleis tegenover een verenigd Makedonië met militaire ambities. Gevolg: het einde van de onafhankelijkheid en een groot Makedonisch koninkrijk.'},
+  f_einde:{type:'mc', label:'338 v.C.: Chaeronea', page:'Les 5 deel 3, p. 35-39', q:'Wanneer en waar verloren de Griekse poleis hun onafhankelijkheid?', opts:['in 338 v.C. bij Chaeronea','in 490 v.C. bij Marathon','in 480 v.C. bij Salamis','in 323 v.C. in Babylon'], ok:0, hint:'Je was er net bij.', uitleg:'In 338 v.C. versloeg Philippos de Griekse poleis bij Chaeronea. Vanaf dan maakten ze deel uit van het Makedonische koninkrijk.'},
+  f_valex:{type:'mc', v:true, label:'V+ Alexander de Grote', page:'V+ Alexander de Grote (Classroom)', q:'Wie volgde Philippos op en veroverde daarna het Perzische rijk?', opts:['zijn zoon Alexander, later "de Grote" genoemd','Leonidas','Perikles','Darius'], ok:0, hint:'Hij werd zo bekend dat hij "de Grote" werd genoemd.', uitleg:'Alexander volgde zijn vader op en veroverde het Perzische rijk. Na zijn dood in 323 v.C. viel zijn rijk uiteen. Meer daarover in de V+ opdracht in Classroom.'}
+};
+
+/* Bronnen: url = foto (Wikimedia Commons), svg = eigen tekening als reserve */
+const WM = f => 'https://commons.wikimedia.org/wiki/Special:FilePath/' + f + '?width=700';
+const cardSvg = inner => `<svg viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg">${inner}</svg>`;
+const SRC = {
+  ostrakon:{ nr:'B1', titel:'Een ostrakon', url:WM('Ostracon_Themistocles.jpg'), cap:'B1: foto van een ostrakon (potscherf) met de naam van Themistokles, 5de eeuw v.C. (Museum van de oude Agora, Athene)', capSvg:'B1: tekening van een ostrakon (potscherf) met een naam erin gekrast, 5de eeuw v.C.',
+    svg:() => cardSvg(`<rect width="200" height="150" fill="#2b2420"/><path d="M40 30 L150 22 L172 70 L150 128 L60 120 L28 80Z" fill="#c4774a"/><path d="M40 30 L150 22 L160 40 L45 48Z" fill="#d68a5c"/><text x="98" y="78" text-anchor="middle" font-family="serif" font-size="15" fill="#3a1f12" transform="rotate(-6 98 78)">ΘΕΜΙΣΘΟΚΛΕΣ</text><text x="100" y="98" text-anchor="middle" font-family="serif" font-size="12" fill="#3a1f12" transform="rotate(-6 100 98)">ΝΕΟΚΛΕΟΣ</text>`) },
+  klero:{ nr:'B2', titel:'Een klèrotèrion', cap:'B2: tekening (reconstructie) van een klèrotèrion, een stenen lotingsmachine uit Athene, 4de eeuw v.C.',
+    svg:() => cardSvg(`<rect width="200" height="150" fill="#e9dfc8"/><rect x="60" y="14" width="80" height="126" fill="#d6cdb8" stroke="#a69c86" stroke-width="3"/>${Array.from({length:50},(_,i)=>`<rect x="${68+(i%5)*14}" y="${22+Math.floor(i/5)*11}" width="8" height="4" fill="#5a5244"/>`).join('')}<rect x="142" y="20" width="8" height="110" fill="#8a7a5c"/><circle cx="146" cy="30" r="4" fill="#fff"/><circle cx="146" cy="44" r="4" fill="#111"/>`) },
+  plutarchus:{ nr:'B3', titel:'Plutarchus over Sparta', cap:'B3: geschreven bron: Plutarchus, Leven van Lykourgos (vrij vertaald en ingekort), geschreven ca. 100 n.C.',
+    svg:() => cardSvg(`<rect width="200" height="150" fill="#5a3f2c"/><rect x="22" y="14" width="156" height="122" rx="6" fill="#f1e2bd"/><rect x="14" y="10" width="14" height="130" rx="7" fill="#c9a874"/><rect x="172" y="10" width="14" height="130" rx="7" fill="#c9a874"/><foreignObject x="34" y="20" width="132" height="112"><div xmlns="http://www.w3.org/1999/xhtml" style="font:9.5px/1.35 Georgia,serif;color:#3a2a1a">Op zevenjarige leeftijd werden de jongens in groepen ingedeeld. Ze liepen blootsvoets, kregen weinig kleren en sliepen op riet dat ze zelf plukten. Lezen en schrijven leerden ze maar zoveel als nodig was.</div></foreignObject>`) },
+  helm:{ nr:'B4', titel:'De helm van Miltiades', url:WM('Helmet_of_Miltiades.jpg'), cap:'B4: foto van de bronzen helm van Miltiades met inscriptie, ca. 490 v.C. (Archeologisch Museum van Olympia)', capSvg:'B4: tekening van een bronzen Korinthische helm, zoals die van Miltiades, ca. 490 v.C.',
+    svg:() => cardSvg(`<rect width="200" height="150" fill="#1f2b33"/><path d="M60 120 Q50 40 100 26 Q150 40 140 120 L118 120 L116 84 Q100 76 84 84 L82 120Z" fill="#b8862a"/><path d="M84 84 Q100 76 116 84 L114 96 Q100 90 86 96Z" fill="#1f2b33"/><path d="M97 84 h6 v30 h-6z" fill="#8a6420"/><path d="M70 60 Q100 50 130 60" stroke="#8a6420" stroke-width="3" fill="none"/>`) },
+  trireme:{ nr:'B5', titel:'Een trireme', url:WM('Olympias.1.JPG'), cap:'B5: foto van de Olympias, een moderne reconstructie (1987) van een Griekse trireme', capSvg:'B5: tekening van een Griekse trireme (oorlogsschip met drie rijen roeiers), 5de eeuw v.C.',
+    svg:() => { const c = document.createElement('canvas'); c.width = 400; c.height = 300; const g = c.getContext('2d'); g.fillStyle = '#1d8d9c'; g.fillRect(0,0,400,300); drawShip(g, 200, 150, -.15, '#4a3020', '#c9a874', 1, 2.6, false); return `<img src="${c.toDataURL()}" alt="">`; } },
+  leonidas:{ nr:'B6', titel:'Het standbeeld van Leonidas', url:WM('Leonidas_Monument_Thermopylae.jpg'), cap:'B6: foto van het monument voor Leonidas bij Thermopylae, gemaakt in 1955', capSvg:'B6: tekening van het monument voor Leonidas bij Thermopylae, gemaakt in 1955',
+    svg:() => cardSvg(`<rect width="200" height="150" fill="#9fd0da"/><rect x="60" y="110" width="80" height="40" fill="#cfc6b3"/><g fill="#5a4a2a"><circle cx="100" cy="34" r="10"/><path d="M88 46 h24 l4 40 h-32z"/><path d="M86 86 l-6 26 h8 l6 -24z M114 86 l6 26 h-8 l-6 -24z"/><circle cx="78" cy="66" r="14"/><path d="M114 50 l26 -30" stroke="#5a4a2a" stroke-width="4"/></g>`) },
+  philmunt:{ nr:'B7', titel:'Een munt van Philippos', cap:'B7: tekening van een gouden munt (stater) van Philippos II van Makedonië, 4de eeuw v.C.',
+    svg:() => cardSvg(`<rect width="200" height="150" fill="#2a1d16"/><circle cx="100" cy="75" r="58" fill="#e2b64a" stroke="#b5832a" stroke-width="5"/><circle cx="100" cy="75" r="48" fill="none" stroke="#c99a36" stroke-width="2"/><path d="M80 100 Q72 60 96 46 Q120 40 124 64 Q126 84 112 92 L114 104Z" fill="#c99a36"/><path d="M84 54 q16 -14 36 0" stroke="#94C021" stroke-width="5" fill="none"/><text x="100" y="128" text-anchor="middle" font-family="serif" font-size="12" font-weight="700" fill="#7a5418">ΦΙΛΙΠΠΟΥ</text>`) }
+};
+
+const VPINFO = {
+  vp_akro:{ p:'Vanaf de Akropolis zie je heel Athene: de agora, de Pnyx en verderop de haven. Athene is een <b>polis</b>, een stadstaat met eigen wetten en bestuur.<br><br>Vroeger had een koning alle macht. In de 8ste eeuw v.C. namen rijke grootgrondbezitters de macht over. Toen Athene een handelspolis werd, werden ook ambachtslui en handelaars rijk. Zij moesten als <b>hopliet</b> meevechten, maar hadden geen inspraak. Om sociale spanningen te vermijden kregen ze vanaf de 6de eeuw v.C. politieke inspraak. In <b>508 v.C.</b> werd Athene een democratie.', after: cb => ask('a_bestuur', cb) },
+  vp_sparta:{ p:'Sparta ligt in een vruchtbare vallei op de Peloponnesos, omsloten door het <b>Taygetosgebergte</b>. Er is geen directe toegang tot de zee. Daardoor is Sparta gericht op het binnenland om te overleven.<br><br>Valt je nog iets op? Sparta heeft geen stadsmuur. De Spartanen zeggen: onze soldaten zijn onze muur.', after: cb => ask('b_ligging', cb) },
+  vp_thermo:{ p:'Thermopylae betekent "hete poorten", naar de warme bronnen hier. De pas tussen de bergen en de zee is op sommige plaatsen maar enkele tientallen meters breed. Hier kan een klein leger een enorm leger tegenhouden.<br><br>Het bronzen standbeeld van Leonidas dat hier vandaag staat, werd pas in 1955 gemaakt: een monumentale bron, maar <b>secundair</b>. Het vertelt meer over hoe wij Leonidas willen herinneren dan over de slag zelf.', src:'leonidas' }
+};
+
+/* ================= MISSIES ================= */
+const sub = id => { st.sub = st.sub || {}; return st.sub[id] = st.sub[id] || {}; };
+const STEPS = [
+/* ---------- HERINNERING 1: ATHENE ---------- */
+{ id:'a_intro', act:0, zone:'athene', variant:'vroeg', at:'harbour', obj:'Loop naar de agora en zoek Glaux', fight:false,
+  start(){
+    cut([{ kop:'Mnemosyne-machine', t:'Welkom terug, {naam}', p:'Glaux heeft een nieuwe machine gevonden: de <b>Mnemosyne</b>, genoemd naar de Griekse godin van het geheugen. Je kan er de herinneringen van het oude Griekenland mee beleven, alsof je er zelf rondloopt.<br><br>Zes herinneringen wachten op jou: van de democratie in Athene tot de dag dat de Griekse poleis hun vrijheid verloren. Het wordt spannend. Er wordt gevochten. Niet elke herinnering loopt goed af.' },
+         { kop:ACTS[0].kop, jaar:'490 v.C.', plaats:'Athene, de haven', t:ACTS[0].t, p:'<b>Besturing:</b> lopen met <span class="kbd">Z Q S D</span>, <span class="kbd">W A S D</span> of de pijltjes. <span class="kbd">Shift</span> om te sprinten. <span class="kbd">E</span> om te praten. <span class="kbd">Tab</span> opent je dagboek met bronnen en score.<br><br>Volg de gouden markering. Glaux wacht op de agora.' }], () => {});
+    const g = spawn('athener', Z.pts.stoa, { kind:'npc', name:'Glaux', owl:true, talkLabel:'Praat met Glaux' }); G.marker = g;
+    g.talk = () => say([['glaux','Daar ben je! Kijk rond, {naam}: dit is de <b>agora</b>, het marktplein en het hart van Athene. Hier wordt gehandeld, gepraat en gestemd.'],
+      ['glaux','Maar niet iedereen in deze stad heeft dezelfde rechten. Praat met vier inwoners: een rijke burger, een migrant, een slaaf en een vrouw. Zij vertellen je hoe het hier echt zit.']], nextStep);
+  }},
+{ id:'a_inwoners', act:0, obj:'Praat met vier inwoners van Athene', fight:false,
+  start(){
+    const S = sub('a_inwoners'), g = spawn('athener', Z.pts.stoa, { kind:'npc', name:'Glaux', owl:true });
+    const people = [
+      { k:'kallias', look:'elite', pt:Z.pts.agora, lines:[['kallias','Goedendag, vreemdeling. Ik ben Kallias. Mijn familie bezit grote stukken land buiten de stad, dus onze landbouwopbrengsten maken ons rijk.'],['kallias','Ik ben <b>burger</b>: een vrije man, geboren uit Atheense ouders. Op mijn achttiende kreeg ik mijn burgerrechten. Ik mag aan politiek doen, eigendom bezitten en trouwen met een Atheense vrouw. Maar let op: ook tussen burgers zijn er grote verschillen. Een gewone boer heeft het veel moeilijker dan ik.']], q:'a_burger' },
+      { k:'sostratos', look:'metoik', pt:Z.pts.stall2, lines:[['sostratos','Sostratos, handelaar in olijfolie. Mijn grootvader kwam uit Milete. Wij wonen al drie generaties in Athene, maar we blijven <b>migranten</b>.'],['sostratos','Ik ben vrij, ja. Maar ik mag geen huis of grond bezitten, ik betaal extra belastingen en stemmen op de Pnyx? Vergeet het. Wij zijn de ambachtslui en handelaars van deze stad, en toch tellen we minder mee.']], q:'a_metoik' },
+      { k:'daos', look:'slaaf', pt:{ x: Z.pts.agora.x + 150, y: Z.pts.agora.y - 70 }, lines:[['daos','Psst, niet te luid. Ik ben Daos. Ik draag water voor mijn meester, de hele dag.'],['daos','Ik ben een <b>slaaf</b>: ik ben zijn eigendom, net zoals zijn ezel. Ik heb amper rechten. Sommigen van ons werken zelfs in de zilvermijnen, onder de grond. Zonder ons draait niets in Athene. Wij zijn met meer dan jullie denken.']], q:'a_slaaf' },
+      { k:'agariste', look:'vrouw', pt:Z.pts.home, lines:[['agariste','Een bezoeker? Dat is zeldzaam. Ik ben Agariste, de vrouw van een burger. Ik leid ons huishouden: de slaven, de voorraden, de kinderen.'],['agariste','Op de agora of de Pnyx zie je mij niet. Vrouwen hebben geen stem in het publieke leven, ook niet als ze uit een burgerfamilie komen. Mijn man beslist, mijn zoon zal later beslissen. Zo gaat dat hier.']], q:'a_vrouw' }];
+    const left = () => people.filter(p => !S[p.k]);
+    const refresh = () => { const l = left(); objective('Praat met vier inwoners van Athene', `${4 - l.length} / 4 gesproken`); G.marker = l.length ? ents.find(e => e.pid === l[0].k) : g; };
+    people.forEach(p => { const e = spawn(p.look, p.pt, { kind:'npc', name:SPK[p.k].n.split(',')[0], pid:p.k, wander: p.k === 'daos' ? 40 : 0, quest: !S[p.k] });
+      e.talk = () => { if (S[p.k]) return say([[p.k, 'We hebben al gepraat. Succes, vreemdeling.']]); say(p.lines, () => ask(p.q, () => { S[p.k] = 1; e.quest = false; save(); refresh(); if (!left().length) toast('Ga terug naar <b>Glaux</b> op de agora.'); })); }; });
+    g.talk = () => { if (left().length) return say([['glaux', `Nog ${left().length} inwoner(s) te gaan. Volg de gouden markering.`]]);
+      say([['glaux','Burgers, migranten, slaven, vrouwen: heel verschillende levens in één stad. Je plaats hangt af van je geboorte, je geslacht, je leeftijd, waar je vandaan komt en of je grond bezit.']], () => ask('a_stand', () => say([['glaux','Klim nu naar de top van de <b>Akropolis</b>. Daar staat een uitkijkpunt. Van daaruit zie je hoe deze stad bestuurd wordt.']], nextStep))); };
+    refresh();
+  }},
+{ id:'a_akro', act:0, obj:'Beklim het uitkijkpunt op de Akropolis', fight:false,
+  start(){ G.marker = Z.vps.find(v => v.id === 'vp_akro'); if ((st.vps||{}).vp_akro) return nextStep(); G.onVp = id => { if (id === 'vp_akro') nextStep(); }; } },
+{ id:'a_pnyx', act:0, obj:'Ga naar de Pnyx: de Volksvergadering is begonnen', fight:false,
+  start(){
+    const bema = Z.pts.bema; const crowd = [];
+    for (let i=0;i<26;i++){ const a = Math.PI*1.08 + (i%9)/8*Math.PI*.84, r = 60 + Math.floor(i/9)*28; crowd.push(spawn(pick(['athener','elite','athener','metoik']) === 'metoik' ? 'athener' : pick(['athener','elite']), { x: bema.x + Math.cos(a)*r, y: bema.y + Math.sin(a)*r }, { kind:'npc', faceP:false, dir:Math.atan2(-Math.sin(a), -Math.cos(a)) })); }
+    const m = spawn('strateeg', { x: bema.x, y: bema.y - 4 }, { kind:'npc', name:'Miltiades', dir:-Math.PI/2 }); G.marker = m;
+    let started = false;
+    this.upd = () => { if (!started && dist(P, bema) < 150){ started = true; m.dir = Math.atan2(P.y - m.y, P.x - m.x); go(); } };
+    const go = () => say([['verteller','Duizenden burgers zitten op de helling van de Pnyx. Een heraut roept: "Wie wil het woord?" Miltiades, een van de tien strategen, staat op de spreekstenen.'],
+      ['miltiades','Burgers van Athene! De Perzische koning stuurt een vloot naar onze kust. Wij hebben de Ionische steden geholpen tegen hem, en nu wil hij wraak. Ik stel voor: we trekken uit met onze hoplieten én we vragen Sparta om hulp.'],
+      { q:'Iedereen steekt de hand op of niet. Wat stem jij?', choices:[ { t:'Ik steek mijn hand op: voor het voorstel', f:c => { st.flags.stem = 'voor'; c(); } }, { t:'Ik stem tegen', f:c => { st.flags.stem = 'tegen'; c(); } } ] },
+      ['verteller', 'Een ruime <b>meerderheid</b> stemt voor. Het besluit is genomen.'],
+      ['glaux','Wacht even, {naam}. Jij bent eigenlijk geen burger van Athene. Hoe zat dat ook alweer met wie hier mag stemmen?']],
+      () => ask(['a_stem','a_machten'], () => say([{ q:'Glaux heeft nog een moeilijkere vraag voor wie wil.', choices:[ { t:'V+ zijpad: vergelijk met België', v:true, f:c => ask('a_vbe', c) }, { t:'Nee, verder', f:c => c() } ] }, ['miltiades','Jij daar, met de kap. Wij hebben magistraten nodig, en die worden niet gekozen. Ga naar de agora, naar de lotingsmachine naast de zuilenhal.']], nextStep)));
+  }, update(){ this.upd && this.upd(); } },
+{ id:'a_loting', act:0, obj:'Bekijk de lotingsmachine op de agora', fight:false,
+  start(){ const k = spawn('oude', { x: Z.pts.klero.x - 30, y: Z.pts.klero.y + 18 }, { kind:'npc', name:'Magistraat', talkLabel:'Bekijk de loting' }); G.marker = k;
+    k.talk = () => say([['magistraat','Kijk: elke burger die zich kandidaat stelt, steekt zijn bronzen naamplaatje in een gleuf. Dan laat ik zwarte en witte bolletjes door deze buis rollen. Wit: die rij is gekozen. Zwart: pech.'],
+      ['verteller','Klik-klak-klik... Witte bol! "Rij drie: Lysias, Ktesiphon, Aristeides, Chairephon en Nikias worden dit jaar magistraat."'],
+      ['magistraat','Zo kan niemand de verkiezing kopen. Eén jaar mogen ze dienen, en daarna moeten ze uitleg geven over wat ze deden.']], () => ask('a_loting', () => say([['glaux','Hoor je dat geroezemoes? Er wordt een <b>schervengericht</b> voorbereid. Help de magistraat: zoek vijf potscherven (ostraka) in de stad.']], nextStep))); } },
+{ id:'a_ostra', act:0, obj:'Zoek vijf ostraka (potscherven) in de stad', fight:false,
+  start(){ const S = sub('a_ostra'); const spots = [[36,32],[45,40],[60,34],[33,20],[70,24]];
+    spots.forEach(([x,y],i) => { if (S[i]) return; const p = tpx(x,y); pickups.push({ x: p.x, y: p.y, label:'Raap de potscherf op', kind:'ostrakon', take(pk){ pk.got = true; S[i] = 1; save(); puff(pk.x, pk.y, 'gold', 10); SFX.coin(); addDr(3); const n = Object.keys(S).length; objective('Zoek vijf ostraka (potscherven) in de stad', `${n} / 5 gevonden`); if (n >= 5) done(); else retarget(); } }); });
+    const k = spawn('oude', Z.pts.agora, { kind:'npc', name:'Magistraat' });
+    const retarget = () => { const left = pickups.filter(p => !p.got); G.marker = left.length ? left.reduce((a,b) => dist(P,a) < dist(P,b) ? a : b) : k; };
+    const done = () => { objective('Breng de ostraka naar de magistraat op de agora'); G.marker = k; k.quest = true; };
+    k.talk = () => { if (Object.keys(S).length < 5) return say([['magistraat',`Nog ${5 - Object.keys(S).length} scherven. Ze liggen overal in de stad.`]]);
+      say([['magistraat','Uitstekend. Op elke scherf krassen de burgers één naam. Wie de meeste stemmen krijgt, moet de stad verlaten. Op deze staat de naam van Themistokles, een strateeg die volgens sommigen te machtig wordt.']], () => ask('a_ostra', () => say([['miltiades','Daar ben je! Ik heb een loper nodig. Ren naar <b>Sparta</b> en vraag hen om hulp tegen de Perzen. Het is ver, meer dan 200 kilometer. Vertrek via de <b>oostpoort</b>.']], nextStep))); };
+    objective('Zoek vijf ostraka (potscherven) in de stad', `${Object.keys(S).length} / 5 gevonden`); if (Object.keys(S).length >= 5) done(); else retarget();
+  }},
+{ id:'a_naar', act:0, obj:'Vertrek via de oostpoort naar Sparta', fight:false,
+  start(){ G.marker = Z.pts.gateE; }, update(){ if (dist(P, Z.pts.gateE) < 50){ G.marker = null; cut([{ kop:'Volgens de verhalen', t:'Een loper naar Sparta', p:'De Griekse geschiedschrijver Herodotus vertelt dat de loper Pheidippides in twee dagen van Athene naar Sparta liep, ongeveer 240 kilometer. Jij neemt zijn plaats in.', btn:'Naar Sparta' }], nextStep); } } },
+
+/* ---------- HERINNERING 2: SPARTA ---------- */
+{ id:'b_vp', act:1, zone:'sparta', at:'arrive', obj:'Beklim het uitkijkpunt boven de vallei', fight:false,
+  start(){ if (!sub('b_vp').cut){ sub('b_vp').cut = 1; save(); cut([{ kop:ACTS[1].kop, jaar:'490 v.C.', plaats:'Sparta, op de Peloponnesos', t:ACTS[1].t, p:'Je komt uitgeput aan in een groene vallei. Geen stadsmuren, geen grote haven. Wel soldaten. Overal soldaten.' }], () => {}); }
+    G.marker = Z.vps[0]; if ((st.vps||{}).vp_sparta) return nextStep(); G.onVp = () => nextStep(); } },
+{ id:'b_heloot', act:1, obj:'Spreek in het geheim met een heloot op de akkers', fight:true,
+  start(){
+    const S = sub('b_heloot');
+    for (let i=0;i<7;i++) spawn('heloot', { x: (15 + i*2.6)*T, y: (32 + (i%3)*3.4)*T }, { kind:'npc', wander:20, faceP:false });
+    const h = spawn('heloot', Z.pts.heloot, { kind:'npc', name:'Heloot', talkLabel:'Fluister met de heloot' }); G.marker = h;
+    const guard = (path) => spawn('spartaan', path[0], { kind:'guard', team:'p', path, hp:4, speed:80, reach:38, hpBar:true, cdBase:1.3, state:'patrol' });
+    guard([tpx(14,29), tpx(34,29), tpx(34,33), tpx(14,33)]); guard([tpx(35,44), tpx(14,44), tpx(14,40), tpx(35,40)]); guard([tpx(24,30), tpx(24,44)]);
+    toast('<b>Sluipen:</b> blijf uit het rode zichtveld van de Spartanen. Verstop je in de struiken.', 4500);
+    h.talk = () => { if (S.done) return;
+      say([['heloot','Sst! Duik weg, ze zien ons. Als ze ons samen zien praten, zijn we allebei dood.'],['heloot','Ik ben een <b>heloot</b>. Dit land is van een Spartaan, maar ik bewerk het. De helft van de oogst is voor hem. Mijn vader deed dit, mijn grootvader ook. Wij zijn met veel meer dan de Spartanen, en dat weten ze. Daarom zijn ze altijd gewapend.'],
+        { q:'De heloot kijkt je wanhopig aan. Wat doe je?', choices:[ { t:'Ik geef hem mijn drachmen voor zijn familie (-10)', f:c => { st.flags.heloot = 'help'; addDr(-10); c(); } }, { t:'Ik kan niets voor hem doen en ga verder', f:c => { st.flags.heloot = 'niet'; c(); } } ] }],
+        () => ask(['b_heloot','b_militair'], () => { S.done = 1; save(); say([['glaux','Goed gedaan. Nu naar het oefenterrein, de <b>agogè</b>. Daar worden Spartaanse jongens tot soldaat gemaakt.']], nextStep); })); };
+  }},
+{ id:'b_agoge', act:1, obj:'Ga naar het oefenterrein (agogè) en spreek de trainer', fight:true,
+  start(){
+    for (let i=0;i<8;i++) spawn('jongen', { x: Z.pts.agoge.x - 100 + (i%4)*60, y: Z.pts.agoge.y - 40 + Math.floor(i/4)*70 }, { kind:'npc', wander:16, faceP:false });
+    const t = spawn('spartaan', { x: Z.pts.agoge.x + 110, y: Z.pts.agoge.y }, { kind:'npc', name:'Trainer' }); G.marker = t;
+    t.talk = () => { if (G.spar) return;
+      say([['trainer','Een vreemdeling met een speer? Laat zien wat je kan. Vecht tegen mijn leerling. Hij is twaalf, en hij woont al vijf jaar niet meer bij zijn moeder.'],['glaux','Druk op <span class="kbd">Spatie</span> om aan te vallen. Kijkt je tegenstander je aan en maakt hij zich klaar? Stap dan opzij.']], () => {
+        G.spar = spawn('jongen', { x: Z.pts.agoge.x, y: Z.pts.agoge.y }, { kind:'soldier', team:'x', hp:5, speed:85, reach:34, hpBar:true, yield:true, cdBase:1.5 }); G.marker = G.spar; objective('Oefengevecht: versla de Spartaanse jongen'); }); };
+    this.upd = () => { if (G.spar && G.spar.yielded && !G.sparDone){ G.sparDone = true; G.marker = t; G.spar.kind = 'npc';
+      say([['jongen','Genoeg! Ik geef me over.'],['trainer','Niet slecht. Bij ons leren de jongens vechten, honger lijden en zwijgen. Maar ook zingen, dansen en gedichten van buiten leren. Een Spartaan moet sterk zijn én gehoorzaam aan de staat.']], () => ask('b_opvoeding', () => say([['trainer','Wil je iets van Sparta? Ga dan naar de raad van ouderen, de <b>gerousia</b>.']], nextStep))); } };
+    G.spar = null; G.sparDone = false;
+  }, update(){ this.upd && this.upd(); } },
+{ id:'b_gerousia', act:1, obj:'Breng de boodschap van Athene naar de gerousia', fight:false,
+  start(){ const o = spawn('oude', { x: Z.pts.gerousia.x - 40, y: Z.pts.gerousia.y + 60 }, { kind:'npc', name:'Gerousia' }); spawn('koning', { x: Z.pts.gerousia.x + 30, y: Z.pts.gerousia.y + 64 }, { kind:'npc', name:'Koning' }); spawn('koning', { x: Z.pts.gerousia.x + 60, y: Z.pts.gerousia.y + 60 }, { kind:'npc', name:'Koning' });
+    for (let i=0;i<6;i++) spawn('oude', { x: Z.pts.gerousia.x - 120 + i*30, y: Z.pts.gerousia.y + 100 + (i%2)*14 }, { kind:'npc' });
+    G.marker = o;
+    o.talk = () => say([['oudste','Athene vraagt hulp tegen de Perzen? Wij zijn achtentwintig ouderen, allemaal boven de zestig. Wij beslissen, niet het volk. Onze twee koningen leiden het leger.'],['koning','We zullen komen. Maar nu is het een heilig feest. Wij vertrekken pas na de volle maan.'],['glaux','Te laat... Maar eerst nog iets, {naam}. Iedereen kent de verhalen over de harde Spartaanse opvoeding. Waar komen die verhalen eigenlijk vandaan?']],
+      () => ask(['b_olig','b_bron'], () => say([{ q:'Een zijpad van Glaux:', choices:[ { t:'V+ zijpad: de film 300 en ons beeld van Sparta', v:true, f:c => ask('b_v300', c) }, { t:'Nee, terug naar Athene', f:c => c() } ] }],
+        () => cut([{ kop:'Ondertussen', t:'Geen tijd te verliezen', p:'Je rent terug met slecht nieuws: Sparta komt te laat. Het Atheense leger wacht niet. Samen met een kleine groep soldaten uit de polis Plataea trekt het naar de vlakte van <b>Marathon</b>, waar de Perzen aan land zijn gegaan.', btn:'Naar Marathon' }], nextStep)))); } },
+
+/* ---------- HERINNERING 3: MARATHON ---------- */
+{ id:'c_brief', act:2, zone:'marathon', at:'start', obj:'Meld je bij Miltiades in het Griekse kamp', fight:false,
+  start(){ if (!sub('c_brief').cut){ sub('c_brief').cut = 1; save(); cut([{ kop:ACTS[2].kop, jaar:'490 v.C.', plaats:'De vlakte van Marathon', t:ACTS[2].t, p:'Aan de horizon liggen honderden Perzische schepen. Hun tenten staan tot aan het strand. Ongeveer 10 000 Atheners en Plataeërs staan klaar. De Perzen zijn met veel meer.', sfx:'horn' }], () => {}); }
+    const m = spawn('strateeg', { x: Z.pts.greek.x + 40, y: Z.pts.greek.y }, { kind:'npc', name:'Miltiades' }); G.marker = m;
+    for (let i=0;i<10;i++) spawn('hopliet', { x: Z.pts.greek.x - 60 + (i%5)*26, y: Z.pts.greek.y - 120 + Math.floor(i/5)*240 + rnd(-10,10) }, { kind:'npc', faceP:false, dir:0 });
+    m.talk = () => say([['miltiades','Daar zijn ze. Weet je waarom ze hier zijn? Het begon in Klein-Azië, aan de overkant van de zee.']], () => ask(['c_ionisch','c_oorzaak'], () => say([['miltiades','Luister. Onze hoplieten vechten schouder aan schouder, schild tegen schild. Blijf bij de rij. Als de trompet klinkt, rennen we op ze af, zodat hun boogschutters geen tijd hebben.'],['glaux','Pas op voor de Perzische <b>boogschutters</b> in het paars: ze schieten van ver. Ren naar ze toe!']], nextStep))); } },
+{ id:'c_slag', act:2, obj:'De slag bij Marathon: versla de Perzen', fight:true,
+  start(){ battle({ allies:[{ look:'hopliet', n:12, at:{ x: Z.pts.start.x + 60, y: Z.pts.start.y }, spread:150 }],
+    waves:[ [{ look:'perzisch', n:7, at:Z.pts.persian }, { look:'boog', n:3, at:{ x: Z.pts.persian.x + 120, y: Z.pts.persian.y }, kind:'archer' }],
+            [{ look:'perzisch', n:9, at:Z.pts.persian }, { look:'boog', n:3, at:{ x: Z.pts.persian.x + 140, y: Z.pts.persian.y - 120 }, kind:'archer' }],
+            [{ look:'perzisch', n:10, at:{ x: Z.pts.persian.x, y: Z.pts.persian.y + 80 }, hp:4 }] ],
+    onWin: () => cut([{ kop:'Overwinning', t:'De Perzen vluchten naar hun schepen', p:'De Griekse vleugels sluiten de Perzen in. Wie kan, vlucht naar de schepen. Volgens Herodotus sneuvelden 6400 Perzen en 192 Atheners. Die cijfers komen wel van een Griekse schrijver.<br><br>Een later verhaal vertelt dat een loper naar Athene rende om de overwinning te melden en daarna dood neerviel. Het is een legende, maar daarom bestaat vandaag de marathon.' },
+      { kop:'Na de slag', t:'Een geschenk voor Zeus', p:'Miltiades schenkt zijn helm aan de god Zeus, in het heiligdom van Olympia. Meer dan 2400 jaar later graven archeologen hem op.', src:'helm', btn:'Verder' }], () => ask('c_helm', nextStep)) }); } },
+
+/* ---------- HERINNERING 4: 480 v.C. ---------- */
+{ id:'d_thermo', act:3, zone:'thermo', at:'start', obj:'Spreek koning Leonidas aan bij de muur', fight:true,
+  start(){ if (!sub('d_thermo').cut){ sub('d_thermo').cut = 1; save(); cut([{ kop:ACTS[3].kop, jaar:'480 v.C.', plaats:'Thermopylae, de nauwe pas', t:'Tien jaar later komt hij terug', p:'De nieuwe Perzische koning, Xerxes, trekt met een gigantisch leger naar Griekenland. Deze keer werken veel poleis samen, ook Athene en Sparta. Een klein Grieks leger moet de Perzen tegenhouden in de nauwe pas van Thermopylae.', sfx:'horn' }], () => {}); }
+    const l = spawn('koning', { x: Z.pts.line.x - 40, y: Z.pts.line.y }, { kind:'npc', name:'Leonidas' }); G.marker = l;
+    for (let i=0;i<8;i++) spawn(i%3 ? 'spartaan' : 'thebaan', { x: Z.pts.line.x - 150 + (i%4)*30, y: Z.pts.line.y - 40 + Math.floor(i/4)*60 }, { kind:'npc', faceP:false, dir:0 });
+    l.talk = () => say([['leonidas','Ik ben Leonidas, koning van Sparta. Hier staan Spartanen naast Thespiërs, Thebanen, mannen uit Korinthe en Arkadië. Een paar duizend man. Daartegenover: de grootste legermacht die je ooit zag.']], () => ask('d_solid', () => say([['leonidas','Wil je zien waarom we hier staan? Klim op de rots daar, naar het uitkijkpunt. Daarna: in de rij. Ze komen.']], nextStep))); } },
+{ id:'d_vp', act:3, obj:'Bekijk de pas vanaf het uitkijkpunt (of ga meteen in de rij)', fight:true,
+  start(){ const v = Z.vps[0]; G.marker = (st.vps||{})[v.id] ? Z.pts.line : v; G.onVp = () => { G.marker = Z.pts.line; }; },
+  update(){ if (dist(P, Z.pts.line) < 70 && G.mode === 'play') nextStep(); } },
+{ id:'d_slag', act:3, obj:'Hou de pas: laat de Perzen niet door', fight:true,
+  start(){ battle({ rains:true, allies:[{ look:'spartaan', n:7, at:{ x: Z.pts.line.x + 20, y: Z.pts.line.y }, spread:80, hp:7 }, { look:'thebaan', n:3, at:{ x: Z.pts.line.x - 40, y: Z.pts.line.y }, spread:80, hp:6 }],
+    waves:[ [{ look:'perzisch', n:9, at:Z.pts.east }], [{ look:'perzisch', n:10, at:Z.pts.east }, { look:'boog', n:4, at:{ x: Z.pts.east.x - 40, y: Z.pts.east.y }, kind:'archer' }],
+            [{ look:'perzisch', n:12, at:Z.pts.east, hp:4 }] ],
+    onWin: () => { say([['verteller','Twee dagen lang houden de Grieken stand. Dan komt een boodschapper aangerend: "Ze komen langs de bergen! Ze staan achter ons!"'],['leonidas','Iedereen die kan, vertrekt. Wij blijven. Ga, vreemdeling. Iemand moet navertellen wat hier gebeurd is.']], () => {
+      objective('Ze zijn overal! Overleef tot Glaux je wegtrekt', ''); battle({ timer:30, deathOk:true, waves:[[{ look:'perzisch', n:10, at:Z.pts.west, hp:4 }, { look:'perzisch', n:10, at:Z.pts.east, hp:4 }],[{ look:'perzisch', n:12, at:Z.pts.west, hp:4 }]], allies:[], keepAllies:true, endless:true,
+        onTime: () => cut([{ kop:'Augustus 480 v.C.', t:'De laatste stand', p:'Leonidas en de mannen die bij hem bleven, vechten tot de laatste man. Glaux trekt je op het nippertje uit de herinnering. De weg naar Athene ligt open voor de Perzen.', dark:true, btn:'Verder' }], () => ask(['d_thermo','d_300'], nextStep)) }); }); } }); } },
+{ id:'d_brand', act:3, zone:'athene', variant:'brand', at:'gateE', obj:'Breng drie achtergebleven Atheners naar de haven', fight:true,
+  start(){ const S = sub('d_brand');
+    if (!S.cut){ S.cut = 1; save(); cut([{ kop:'September 480 v.C.', plaats:'Athene', t:'Athene brandt', p:'Themistokles heeft de Atheners laten vluchten naar het eiland Salamis en andere veilige plaatsen. Maar niet iedereen is weg. De Perzen zijn al in de stad. De Akropolis staat in brand.<br><br>Zoek de drie achterblijvers en breng ze naar de <b>haven</b>. Perzische soldaten patrouilleren: verstop je in struiken en hooi.', dark:true, sfx:'horn' }], () => {}); }
+    [[44,30],[60,30],[48,40],[38,24],[66,40],[56,46],[72,20],[40,46],[62,8],[34,30]].forEach(([x,y]) => { const p = tpx(x,y); fires.push({ x: p.x, y: p.y, r: 46 }); });
+    const ppl = [ { k:'philon', look:'oude', pt:tpx(74,46), line:'Mijn benen zijn oud, maar ik loop wel mee. Ga voor, jong.' }, { k:'melissa', look:'vrouw', pt:tpx(36,14), line:'Mijn man is bij de vloot. Breng me naar de schepen, alsjeblieft!' }, { k:'timon', look:'kind', pt:tpx(66,52), line:'Ik ben mijn moeder kwijt... Mag ik met jou mee?' } ];
+    const dock = Z.pts.dock;
+    const pend = () => ppl.filter(p => !S[p.k]);
+    const upd = () => { const l = pend(); objective('Breng drie achtergebleven Atheners naar de haven', `${3 - l.length} / 3 in veiligheid`); const f = ents.find(e => e.follow && !e.safe); G.marker = f ? dock : (l.length ? ents.find(e => e.pid === l[0].k && !e.follow) || dock : dock); };
+    ppl.forEach(p => { if (S[p.k]) return; const e = spawn(p.look, p.pt, { kind:'npc', name:SPK[p.k].n, pid:p.k, quest:true, speed:110 });
+      e.talk = () => { if (e.follow) return; say([[p.k, p.line]], () => { e.follow = true; e.quest = false; e.talk = null; toast(`${SPK[p.k].n} volgt je.`); upd(); }); }; });
+    const guard = path => spawn('perzisch', tpx(...path[0]), { kind:'guard', team:'p', path:path.map(q => tpx(...q)), hp:3, speed:80, hpBar:true, cdBase:1.4, state:'patrol' });
+    guard([[40,38],[52,38],[52,44],[40,44]]); guard([[60,26],[74,26],[74,34],[60,34]]); guard([[32,30],[32,40],[38,40]]); guard([[46,48],[60,50]]); guard([[24,43],[18,46],[24,48]]); guard([[66,14],[76,14],[76,22]]);
+    this.upd = () => { for (const e of ents) if (e.follow && !e.safe && dist(e, dock) < 90){ e.safe = true; e.follow = false; S[e.pid] = 1; save(); addDr(10); SFX.good(); toast(`<b>${SPK[e.pid].n}</b> is in veiligheid.`); e.goto = { x: dock.x - 60, y: dock.y }; e.onArrive = x => { x.dead = true; x.fade = 0; }; upd(); }
+      if (!pend().length && !S.done){ S.done = 1; save(); setTimeout(() => cut([{ kop:'Vanaf het water', t:'Een stad in vlammen', p:'Vanaf de boot zie je de rook boven de Akropolis. De tempels die je eerder zag, zijn verwoest. Maar de Atheners zijn niet verslagen. Hun vloot ligt klaar bij Salamis.', dark:true, btn:'Verder' }], () => ask('d_brand', nextStep)), 400); } };
+    upd();
+  }, update(){ this.upd && this.upd(); } },
+{ id:'d_salamis', act:3, zone:'salamis', at:'start', obj:'Ram vier Perzische schepen in de zeestraat', naval:true,
+  start(){ cut([{ kop:'September 480 v.C.', plaats:'De zeestraat van Salamis', t:'Kapitein van een trireme', p:'Themistokles heeft de Perzische vloot in de smalle zeestraat gelokt. Jij bent kapitein van een trireme: 170 roeiers en een bronzen stormram aan de boeg.<br><br><span class="kbd">Z/W</span> of pijl omhoog: roeien. <span class="kbd">Q/A</span> en <span class="kbd">D</span>: draaien. Hou <span class="kbd">Shift</span> ingedrukt voor rammsnelheid en vaar met je boeg in de flank van een Perzisch schip.', sfx:'horn' }], () => {});
+    naval({ goal:4, onWin: () => cut([{ kop:'Salamis', t:'De zee kleurt rood en zwart', p:'Wrakstukken overal. De Perzische vloot is verslagen. Xerxes keert terug naar Azië. Een jaar later winnen de Grieken ook op het land.', src:'trireme', btn:'Verder' }], () => ask(['d_salamis','d_chrono','d_wijzij'], nextStep)) }); } },
+
+/* ---------- HERINNERING 5: BROEDERS WORDEN VIJANDEN ---------- */
+{ id:'e_perikles', act:4, zone:'athene', variant:'goud', at:'akroRamp', obj:'Spreek met Perikles op de Akropolis', fight:false,
+  start(){ if (!sub('e_perikles').cut){ sub('e_perikles').cut = 1; save(); cut([{ kop:ACTS[4].kop, jaar:'432 v.C.', plaats:'Athene', t:'Een gouden eeuw', p:'Vijftig jaar na de Perzische Oorlogen. Athene is rijker en machtiger dan ooit. Op de Akropolis staan nieuwe, beschilderde tempels. Maar niet iedereen is blij met die macht.' }], () => {}); }
+    const p = spawn('strateeg', Z.pts.akroTop, { kind:'npc', name:'Perikles' }); G.marker = p;
+    p.talk = () => say([['perikles','Kijk rond. Na de Perzische Oorlogen kwam Athene het sterkst uit de strijd. Honderden poleis sloten met ons een bond: samen sterk tegen de Perzen. Zij betalen bijdragen, wij leveren de vloot.'],['perikles','En met dat geld bouwden we dit: het Parthenon. Elke vreemdeling die de haven binnenvaart, ziet het meteen. Zo weten ze wie hier de baas is.']],
+      () => ask(['e_bond','e_macht'], () => say([['glaux','"Wie hier de baas is"... Ga eens naar de <b>haven</b>. Daar komen de bijdragen van de bondgenoten binnen. Vraag hen wat zij ervan vinden.']], nextStep))); } },
+{ id:'e_haven', act:4, obj:'Ga naar de haven en spreek de handelaar uit Naxos', fight:false,
+  start(){ const n = spawn('metoik', { x: Z.pts.dock.x + 50, y: Z.pts.dock.y - 40 }, { kind:'npc', name:'Handelaar uit Naxos' }); G.marker = n;
+    n.talk = () => say([['naxier','Bondgenoten? Wij zijn geen bondgenoten meer, wij zijn onderdanen. Toen Naxos uit de bond wilde stappen, kwam de Atheense vloot. Onze muren werden afgebroken en we moeten blijven betalen.'],['naxier','En met ons geld bouwen zij tempels op hun eigen Akropolis. Sparta kijkt toe en het bevalt hen niet. Let op mijn woorden: dit eindigt in oorlog.']],
+      () => ask('e_rival', () => say([['glaux','Er is opschudding op de agora. Een gezant uit Sparta is aangekomen. Snel!']], nextStep))); } },
+{ id:'e_gezant', act:4, obj:'Ga naar de agora: een Spartaanse gezant is aangekomen', fight:false,
+  start(){ const g = spawn('spartaan', Z.pts.agora, { kind:'npc', name:'Spartaanse gezant' }); G.marker = g;
+    for (let i=0;i<12;i++) spawn(pick(['athener','elite','metoik']), { x: Z.pts.agora.x + Math.cos(i/12*6.28)*90, y: Z.pts.agora.y + Math.sin(i/12*6.28)*70 }, { kind:'npc', faceP:false, dir:Math.atan2(-Math.sin(i/12*6.28), -Math.cos(i/12*6.28)) });
+    g.talk = () => say([['gezant','Sparta heeft één boodschap voor Athene: laat de Grieken vrij. Stop met het onderdrukken van jullie zogenaamde bondgenoten.'],['perikles','Athene laat zich niets opleggen door Sparta.'],['verteller','In 431 v.C. breekt de oorlog uit tussen Athene en Sparta, met hun bondgenoten. Grieken tegen Grieken. Het Spartaanse leger trekt Attika binnen en verbrandt de akkers rond Athene.']],
+      () => cut([{ kop:'431 v.C.', plaats:'Het platteland van Attika', t:'Grieken tegen Grieken', p:'Dezelfde Spartanen die bij Thermopylae naast de Atheners vochten, staan nu tegenover hen. De oogst brandt. Help de boeren en hou de Spartanen tegen.', dark:true, sfx:'horn', btn:'Naar Attika' }], nextStep)); } },
+{ id:'e_slag', act:4, zone:'attika', at:'start', obj:'Hou de Spartanen tegen op het platteland', fight:true,
+  start(){ [[14,14],[26,30],[50,16],[60,32],[40,36]].forEach(([x,y]) => { const p = tpx(x,y); fires.push({ x: p.x, y: p.y, r: 50 }); });
+    battle({ allies:[{ look:'hopliet', n:6, at:{ x: Z.pts.start.x, y: Z.pts.start.y + 80 }, spread:120 }],
+      waves:[[{ look:'spartaan', n:6, at:Z.pts.south, hp:5 }], [{ look:'spartaan', n:8, at:Z.pts.south, hp:5 }], [{ look:'spartaan', n:9, at:Z.pts.south, hp:6 }]],
+      onWin: () => cut([{ kop:'431 tot 404 v.C.', t:'Een oorlog zonder winnaars', p:'Je wint dit gevecht, maar de oorlog duurt nog 27 jaar. In 404 v.C. moet Athene zich overgeven aan Sparta. Daarna strijden Sparta, Athene en Thebe nog decennia om de macht.<br><br>Alle poleis zijn uitgeput. En in het noorden kijkt iemand geduldig toe.', dark:true, btn:'Verder' }], () => ask('e_verh', nextStep)) }); } },
+
+/* ---------- HERINNERING 6: CHAERONEA ---------- */
+{ id:'f_brief', act:5, zone:'chaeronea', at:'start', obj:'Spreek Demosthenes in het Griekse kamp', fight:false,
+  start(){ if (!sub('f_brief').cut){ sub('f_brief').cut = 1; save(); cut([{ kop:ACTS[5].kop, jaar:'338 v.C.', plaats:'Chaeronea, in Boeotië', t:ACTS[5].t, p:'Philippos II, koning van Makedonië, heeft een leger opgebouwd zoals de Grieken het nog nooit zagen. Athene en Thebe, vroeger rivalen, vechten nu samen. Het is te laat, maar dat weten ze nog niet.', src:'philmunt', sfx:'horn' }], () => {}); }
+    const d = spawn('elite', { x: Z.pts.start.x + 30, y: Z.pts.start.y - 30 }, { kind:'npc', name:'Demosthenes' }); G.marker = d;
+    for (let i=0;i<10;i++) spawn(i%2 ? 'hopliet' : 'thebaan', { x: Z.pts.line.x + (i%2)*30, y: Z.pts.line.y - 150 + i*30 }, { kind:'npc', faceP:false, dir:0 });
+    d.talk = () => say([['demosthenes','Jarenlang heb ik de Atheners gewaarschuwd! Terwijl wij ruzie maakten met Sparta en Thebe, bouwde Philippos een leger van soldaten die niets anders doen dan oefenen. En hun speren... de sarissa is vijf, zes meter lang.'],['thebaan','Wij Thebanen staan naast jullie. Vandaag zijn we allemaal Grieken.']],
+      () => ask(['f_phil','f_beroeps'], () => say([['glaux','{naam}, ik zeg het eerlijk: deze herinnering kan je niet winnen. Vecht zo lang je kan. Kijk hoe de falanx werkt.']], nextStep))); } },
+{ id:'f_slag', act:5, obj:'Chaeronea: hou de Makedonische falanx tegen', fight:true,
+  start(){ battle({ timer:70, deathOk:true, endless:true, allies:[{ look:'hopliet', n:7, at:Z.pts.line, spread:160, hp:5 }, { look:'thebaan', n:6, at:{ x: Z.pts.line.x + 30, y: Z.pts.line.y }, spread:160, hp:5 }],
+      waves:[ [{ look:'makedon', n:12, at:{ x: Z.pts.line.x + 560, y: Z.pts.line.y }, phalanx:true, hp:6 }], [{ look:'makedon', n:14, at:{ x: Z.pts.line.x + 600, y: Z.pts.line.y }, phalanx:true, hp:6 }], [{ look:'makedon', n:16, at:{ x: Z.pts.line.x + 620, y: Z.pts.line.y }, phalanx:true, hp:7 }] ],
+      onTime: () => cut([{ kop:'338 v.C.', t:'De muur van speren', p:'De Makedonische falanx rukt onstuitbaar op. De Griekse rijen breken. Duizenden Atheners en Thebanen sneuvelen of worden gevangengenomen.<br><br>Glaux trekt je terug uit de herinnering. Het is voorbij.', dark:true, btn:'Verder' },
+        { kop:'Na de slag', t:'Het einde van de onafhankelijke poleis', p:'Na Chaeronea maken de Griekse poleis deel uit van het Makedonische koninkrijk. Ze hebben nog hun tempels, hun taal en hun theaters. Maar over hun eigen bestuur beslissen ze niet meer.', btn:'Verder' }],
+        () => ask(['f_falanx','f_oorzgev','f_einde'], nextStep)) }); } },
+{ id:'f_eind', act:5, obj:'Schrijf je verslag voor Glaux', fight:false,
+  start(){ say([['glaux','Zes herinneringen, {naam}. Van de eerste democratie tot de val. Een echte historicus kan uitleggen wat hij of zij gezien heeft. Schrijf het op, dan geef ik het mee aan je leerkracht.']], () =>
+    openQ('open1', 'Leg in je eigen woorden uit waarom de Griekse poleis in 338 v.C. hun onafhankelijkheid verloren. Gebruik de begrippen <b>solidariteit</b>, <b>rivaliteit</b> en <b>Philippos</b>.', () =>
+    openQ('open2', 'Vergelijk Athene en Sparta. Geef één verschil op <b>politiek</b> vlak en één verschil op <b>sociaal</b> vlak.', () =>
+    say([{ q:'Nog één zijpad voor wie wil weten hoe het verder ging:', choices:[ { t:'V+ zijpad: de opvolger van Philippos', v:true, f:c => ask('f_valex', c) }, { t:'Nee, naar het einde', f:c => c() } ] }], endGame)))); } }
+];
+
+/* ================== HOOFDLUS, MISSIES STARTEN, GEVECHTEN, TEKENEN ================== */
+const KEY = 'polis_2A_v1';
+function fresh(){ return { naam:'', klas:'', step:0, act:0, dr:30, log:{}, src:[], flags:{}, sub:{}, vps:{}, open:{}, hints:{}, try1:{}, seen:0, playT:0 }; }
+let st = (() => { try { const s = JSON.parse(localStorage.getItem(KEY)); return s && s.log ? s : fresh(); } catch(e){ return fresh(); } })();
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(st)); } catch(e){} }
+
+const baseZoom = () => G.naval ? .8 : 1.65;
+function makePlayer(pt){ const p = mkEnt({ look:'hero', kind:'player', x:pt.x, y:pt.y, hp:10, maxhp:10, speed:118, team:'g', r:10, reach:40, tag:'player' }); return p; }
+function revealAround(x, y, rt){ if (!Z) return; const cw = Math.ceil(Z.w/2), ch = Math.ceil(Z.h/2), cxp = Math.floor(x/T/2), cyp = Math.floor(y/T/2), r = Math.ceil(rt/2); for (let j=cyp-r; j<=cyp+r; j++) for (let i=cxp-r; i<=cxp+r; i++) if (i>=0 && j>=0 && i<cw && j<ch && (i-cxp)**2 + (j-cyp)**2 <= r*r) Z.seen[j*cw+i] = 1; }
+
+function ambient(){
+  if (Z.id === 'athene' && Z.variant !== 'brand'){
+    const spots = [Z.pts.agora, Z.pts.stall1, Z.pts.stall2, Z.pts.pnyx, tpx(60,29), tpx(70,29), tpx(48,44), tpx(36,36), tpx(20,44)];
+    for (let i=0;i<18;i++){ const p = spots[i % spots.length]; spawn(pick(['athener','athener','elite','metoik','slaaf','vrouw','oude','kind']), p, { kind:'npc', wander:80, jit:40, tag:'amb', speed:50 }); }
+    spawn('hopliet', { x: Z.pts.gateE.x - 30, y: Z.pts.gateE.y - 40 }, { kind:'npc', tag:'amb', dir:Math.PI }); spawn('hopliet', { x: Z.pts.gateW.x + 30, y: Z.pts.gateW.y + 40 }, { kind:'npc', tag:'amb', dir:0 });
+  }
+  if (Z.id === 'sparta'){ [tpx(44,24), tpx(30,24), tpx(60,24), tpx(40,30)].forEach(p => { spawn('spartaan', p, { kind:'npc', wander:90, tag:'amb', speed:55 }); spawn(pick(['vrouw','kind','oude']), p, { kind:'npc', wander:70, tag:'amb', jit:30, speed:45 }); }); }
+}
+
+/* ---------- missies ---------- */
+function zoneFor(i){ for (let k=i; k>=0; k--) if (STEPS[k].zone) return STEPS[k]; return STEPS[0]; }
+function startStep(i, restart){
+  const s = STEPS[i]; if (!s) return;
+  st.step = i; st.act = s.act; save();
+  G.advancing = false; G.navalCfg = null; G.onVp = null; G.bt = null; G.battle = false; G.marker = null; G.afterUI = null; G.rammed = 0;
+  const zs = s.zone ? s : (Z ? null : zoneFor(i));
+  if (zs && (!Z || Z.id !== zs.zone || (zs.variant||'') !== (Z.variant||''))){
+    Z = loadZone(zs.zone, zs.variant); G.naval = false; ents = []; decals = [];
+    P = makePlayer(Z.pts[zs.at] || Z.pts.start || { x: Z.w*T/2, y: Z.h*T/2 }); ents.push(P); ambient(); revealAround(P.x, P.y, 12);
+    $('#zone').textContent = Z.title; toast(`<b>${Z.title}</b>`, 2200);
+  } else {
+    ents = ents.filter(e => e === P || (e.tag === 'amb' && !e.dead));
+    if (restart && G.stepPos){ P.x = G.stepPos.x; P.y = G.stepPos.y; }
+  }
+  projs = []; rains = []; fires = []; pickups = [];
+  if (P.kind !== 'player'){ P = makePlayer(Z.pts.start); ents = [P]; G.naval = false; }
+  P.hp = P.maxhp; P.dead = false; P.invul = 1;
+  G.stepPos = { x: P.x, y: P.y }; G.canFight = s.fight !== false; zoomTarget = baseZoom();
+  objective(s.obj, ''); updateHUD(true);
+  s.start.call(s);
+}
+function nextStep(){ if (G.advancing) return; G.advancing = true; SFX.quest(); addDr(5); toast('<b>Missie voltooid</b>', 1800); setTimeout(() => startStep(st.step + 1), 30); }
+
+/* ---------- gevechten ---------- */
+function battle(cfg){
+  const keep = cfg.keepAllies; if (!keep) ents = ents.filter(e => !(e.kind === 'soldier' && e.team === 'g'));
+  (cfg.allies||[]).forEach(a => { for (let i=0;i<a.n;i++){ const y = a.at.y + (i - (a.n-1)/2) * (a.spread*2/Math.max(1,a.n-1)); const pt = { x: a.at.x + (i%2)*22 - 11, y }; spawn(a.look, pt, { kind:'soldier', team:'g', hp:a.hp||5, speed:85, reach:36, hpBar:true, cdBase:rnd(1.2,1.7), post:{ x: pt.x, y: pt.y }, dir:0, tag:'step' }); } });
+  G.bt = { cfg, wave:-1, wait:1.2, timer:cfg.timer||0, rainT:5, enemies:[] }; G.battle = true; SFX.horn();
+}
+function spawnWave(groups){
+  const list = [];
+  groups.forEach(gr => { const team = gr.team || (gr.look === 'spartaan' ? 's' : gr.look === 'makedon' ? 'm' : 'p');
+    for (let i=0;i<gr.n;i++){
+      let pt; if (gr.phalanx){ const cols = 4, rows = Math.ceil(gr.n/cols); pt = { x: gr.at.x + (i % cols)*30, y: gr.at.y + (Math.floor(i/cols) - (rows-1)/2)*34 }; }
+      else pt = { x: gr.at.x + rnd(-40, 40), y: gr.at.y + rnd(-110, 110) };
+      if (blocked(pt.x, pt.y, 8)) pt = { x: gr.at.x, y: gr.at.y };
+      const e = spawn(gr.look, pt, { kind: gr.kind || 'soldier', team, hp: gr.hp || (gr.kind === 'archer' ? 2 : 3), speed: gr.phalanx ? 34 : rnd(70, 92), reach: gr.phalanx ? 70 : 34, dmg: gr.phalanx ? 2 : 1, hpBar:true, cdBase: gr.phalanx ? 1.6 : rnd(1.3, 1.9), phalanx: !!gr.phalanx, dir: Math.PI, tag:'step', aggro: 1400 });
+      list.push(e); } });
+  return list;
+}
+function updateBattle(dt){
+  const b = G.bt; if (!b) return; const c = b.cfg;
+  if (b.timer){ b.timer -= dt; if (b.timer <= 0){ b.timer = 0; G.bt = null; G.battle = false; ents.forEach(e => { if (e.team !== 'g' && e.kind !== 'player' && !e.dead) e.kind = 'npc'; }); c.onTime && c.onTime(); return; } }
+  const alive = b.enemies.filter(e => !e.dead).length;
+  if (b.wave < 0 || alive === 0 || (c.endless && alive < 5)){
+    b.wait -= dt;
+    if (b.wait <= 0){
+      const nw = b.wave + 1;
+      if (nw < c.waves.length || c.endless){ b.wave = nw; b.enemies = b.enemies.filter(e => !e.dead).concat(spawnWave(c.waves[Math.min(nw, c.waves.length-1)])); b.wait = c.endless ? 6 : 2; if (nw > 0) { SFX.horn(); toast(c.endless ? 'Nieuwe vijanden!' : `<b>Golf ${nw+1}</b>`, 1500); } }
+      else if (!c.endless){ G.bt = null; G.battle = false; SFX.quest(); toast('<b>Overwinning!</b>', 2000); setTimeout(() => c.onWin && c.onWin(), 1300); return; }
+    }
+  }
+  if (c.rains){ b.rainT -= dt; if (b.rainT <= 0){ b.rainT = rnd(5, 8); if (!G.rainTold){ G.rainTold = true; toast('<b>Pijlenregen!</b> Ga weg uit de rode cirkels.', 3000); } for (let i=0;i<3;i++) rains.push({ x: P.x + rnd(-120,120), y: P.y + rnd(-90,90), r: 46, t: 1.5, t0: 1.5 }); } }
+  const n = b.enemies.filter(e => !e.dead).length;
+  $('#objs').innerHTML = b.timer ? `Hou stand: <b>${Math.ceil(b.timer)} s</b> · vijanden: ${n}` : `Golf ${Math.max(1,b.wave+1)} / ${c.waves.length} · vijanden over: ${n}`;
+}
+function onPlayerDown(){
+  if (G.bt && G.bt.cfg.deathOk){ P.dead = false; P.hp = P.maxhp; P.invul = 2; const back = G.stepPos; P.x = back.x; P.y = back.y; toast('Glaux trekt je terug achter de linie.', 2200); return; }
+  G.mode = 'ui'; SFX.bad(); addDr(-10);
+  const box = $('#desync'); box.classList.add('open');
+  $('#desyncBtn').onclick = () => { box.classList.remove('open'); G.mode = 'play'; startStep(st.step, true); };
+}
+
+/* ---------- zeeslag ---------- */
+function naval(cfg){
+  G.naval = true; zoomTarget = baseZoom(); ents = []; const s0 = Z.pts.start;
+  P = mkShip({ team:'g', hull:'#4a3020', deck:'#c9a874', hp:6, maxhp:6, x:s0.x, y:s0.y, a:0, isPlayer:true }); ents.push(P);
+  for (let i=0;i<4;i++) ents.push(mkShip({ team:'g', hull:'#5a3a28', deck:'#c9a874', hp:3, maxhp:3, x: s0.x - 60 - (i%2)*80, y: s0.y + (i - 1.5)*90, a:0 }));
+  let wave = 0; const spawnP = n => { for (let i=0;i<n;i++){ const e = Z.pts.persEntry; ents.push(mkShip({ team:'p', hull:'#2a2030', deck:'#7a2f4a', hp:2, maxhp:2, x: e.x - i*70 - rnd(0,40), y: e.y + rnd(-160,160), a: Math.PI + rnd(-.3,.3), v:50 })); } wave++; };
+  spawnP(6);
+  G.navalCfg = { cfg, spawnP, goal: cfg.goal };
+  revealAround(P.x, P.y, 30);
+}
+function updateNaval(dt){
+  const nc = G.navalCfg; if (!nc) return;
+  updateShip(P, dt, true);
+  for (const e of ents) if (e !== P) updateShip(e, dt, false);
+  const pers = ents.filter(e => e.team === 'p' && !e.dead).length;
+  if (pers < 4) nc.spawnP(3);
+  ents = ents.filter(e => !e.dead || (e.sink||0) < 4);
+  $('#objs').innerHTML = `Geramd: <b>${G.rammed||0} / ${nc.goal}</b> · romp: ${'■'.repeat(Math.max(0,P.hp))}${'□'.repeat(Math.max(0,P.maxhp-P.hp))}`;
+  if ((G.rammed||0) >= nc.goal && !nc.done){ nc.done = true; SFX.quest(); toast('<b>Overwinning op zee!</b>'); setTimeout(() => { G.navalCfg = null; nc.cfg.onWin(); }, 1200); }
+}
+
+/* ---------- einde ---------- */
+function endGame(){
+  G.mode = 'ui'; st.done = st.done || Date.now(); save(); confetti(); SFX.quest();
+  const t = totals(), pct = t.bm ? t.bp/t.bm : 0; const weak = Object.values(st.log).filter(l => l.pts < 1 && !l.v);
+  const box = $('#end'); box.querySelector('.ebody').innerHTML = `<h1>Alle herinneringen beleefd</h1>
+    <p>Je hebt zes herinneringen beleefd: van de stem van het volk in Athene tot de muur van speren bij Chaeronea. ${st.flags.heloot === 'help' ? 'En ergens in Sparta herinnert een heloot zich een vreemdeling met een kap die hem hielp.' : ''}</p>
+    <div class="rank"><div class="rk">${rank(pct)}</div><div><b>${fmtP(t.bp)}</b> / ${t.bm} basis${t.vm ? ` · <b>${fmtP(t.vp)}</b> / ${t.vm} V+` : ''} · ${st.dr} drachmen · ${(st.src||[]).length} bronnen</div></div>
+    ${weak.length ? `<div class="rem"><b>Remediëring: herhaal deze onderdelen</b><ul>${weak.map(l => `<li>${l.label} <span class="boek">${ICO.book} ${l.page}</span></li>`).join('')}</ul></div>` : '<div class="rem good"><b>Alles in één keer juist?</b> Een echte strateeg!</div>'}
+    <div class="inlever"><b>Inleveren bij ${CONFIG.leerkracht}</b><ol><li>Klik op de knop hieronder. Je verslag (pdf) wordt gedownload.</li><li>Gmail opent met een mail naar ${CONFIG.mail}.</li><li><b>Voeg de pdf toe als bijlage</b> en verstuur.</li></ol></div>
+    <div class="qrow"><button class="btn" id="eMail">Download pdf en open Gmail ${ICO.arrow}</button><button class="btn alt" id="ePdf">Enkel pdf</button><button class="btn alt" id="eBook">Bronnen bekijken</button></div>`;
+  box.classList.add('open');
+  $('#eMail').onclick = () => { if (makePDF()) openMail(); }; $('#ePdf').onclick = () => makePDF(); $('#eBook').onclick = () => openJournal('bronnen');
+}
+
+/* ---------- HUD ---------- */
+let hudT = 0;
+function updateHUD(force){
+  const hp = P ? Math.max(0, P.hp)/P.maxhp : 1; $('#hpf').style.width = (hp*100) + '%'; $('#hpf').classList.toggle('low', hp < .35); $('#stf').style.width = (stamina*100) + '%';
+  $('#dr').textContent = st.dr;
+  if (G.mode === 'play' && !G.naval){ const n = nearbyInteract(); const pr = $('#prompt'); if (n){ pr.innerHTML = `<span class="kbd">E</span> ${n.label}`; pr.classList.add('on'); } else pr.classList.remove('on'); $('#hidden').classList.toggle('on', !!P.hidden); }
+  else { $('#prompt').classList.remove('on'); $('#hidden').classList.remove('on'); }
+  hudT -= 1/60; if (hudT <= 0 || force){ hudT = .2; drawMini(); }
+}
+function drawMini(){
+  const m = $('#mm'), g = m.getContext('2d'); if (!Z) return; const W = m.width, H = m.height, sx = W/(Z.w*T), sy = H/(Z.h*T);
+  g.clearRect(0,0,W,H); g.drawImage(Z.mini, 0, 0, W, H);
+  const cw = Math.ceil(Z.w/2), ch = Math.ceil(Z.h/2), fw = W/cw, fh = H/ch; g.fillStyle = 'rgba(8,24,27,.88)';
+  for (let j=0;j<ch;j++) for (let i=0;i<cw;i++) if (!Z.seen[j*cw+i]) g.fillRect(i*fw - .5, j*fh - .5, fw + 1, fh + 1);
+  for (const v of Z.vps){ g.fillStyle = (st.vps||{})[v.id] ? '#e9b04a' : '#cfd4d8'; g.beginPath(); g.arc(v.x*sx, v.y*sy, 3.5, 0, 7); g.fill(); }
+  for (const e of ents){ if (e === P || e.dead) continue; if ((e.team === 'p' || e.team === 's' || e.team === 'm') && (G.battle || e.kind === 'guard' || e.kind === 'ship')){ g.fillStyle = '#E61149'; g.fillRect(e.x*sx - 1.5, e.y*sy - 1.5, 3, 3); } else if (e.team === 'g' && e.kind === 'ship'){ g.fillStyle = '#61C2CB'; g.fillRect(e.x*sx - 1.5, e.y*sy - 1.5, 3, 3); } }
+  const mk = markerPos(); if (mk){ g.fillStyle = '#ffd24a'; g.strokeStyle = '#000'; g.beginPath(); g.moveTo(mk.x*sx, mk.y*sy - 5); g.lineTo(mk.x*sx + 4, mk.y*sy); g.lineTo(mk.x*sx, mk.y*sy + 5); g.lineTo(mk.x*sx - 4, mk.y*sy); g.closePath(); g.fill(); g.stroke(); }
+  g.save(); g.translate(P.x*sx, P.y*sy); g.rotate(G.naval ? P.a : P.dir); g.fillStyle = '#fff'; g.strokeStyle = '#009BA8'; g.lineWidth = 1.5; g.beginPath(); g.moveTo(6, 0); g.lineTo(-4, 4); g.lineTo(-4, -4); g.closePath(); g.fill(); g.stroke(); g.restore();
+}
+function markerPos(){ const m = G.marker; if (!m) return null; if (m.dead || m.got) return null; return { x: m.x, y: m.y }; }
+
+/* ---------- tekenen ---------- */
+let vignette = null;
+function makeVignette(){ const c = document.createElement('canvas'); c.width = VW; c.height = VH; const g = c.getContext('2d'); const gr = g.createRadialGradient(VW/2, VH/2, VH*.35, VW/2, VH/2, VH*.85); gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(1, 'rgba(0,0,0,.55)'); g.fillStyle = gr; g.fillRect(0, 0, VW, VH); vignette = c; }
+function render(){
+  cx.setTransform(1,0,0,1,0,0); cx.fillStyle = '#0b1a1d'; cx.fillRect(0, 0, VW, VH); if (!Z) return;
+  const vw = VW/ZOOM, vh = VH/ZOOM, W = Z.w*T, H = Z.h*T;
+  let fx = P.x, fy = P.y; if (G.mode === 'vp' && G.vpAnim){ fx = G.vpAnim.v.x; fy = G.vpAnim.v.y; }
+  const tx = W < vw ? (W - vw)/2 : clamp(fx - vw/2, 0, W - vw), ty = H < vh ? (H - vh)/2 : clamp(fy - vh/2, 0, H - vh);
+  cam.x = lerp(cam.x, tx, G.mode === 'vp' ? .04 : .2); cam.y = lerp(cam.y, ty, G.mode === 'vp' ? .04 : .2);
+  const sx = shake ? rnd(-shake, shake) : 0, sy = shake ? rnd(-shake, shake) : 0;
+  cx.setTransform(ZOOM, 0, 0, ZOOM, Math.round((-cam.x)*ZOOM + sx), Math.round((-cam.y)*ZOOM + sy));
+  const x0 = Math.max(0, Math.floor(cam.x)), y0 = Math.max(0, Math.floor(cam.y)), w0 = Math.min(W - x0, Math.ceil(vw)+2), h0 = Math.min(H - y0, Math.ceil(vh)+2);
+  if (w0 > 0 && h0 > 0) cx.drawImage(Z.bg, x0, y0, w0, h0, x0, y0, w0, h0);
+  /* golfjes op het water */
+  const tx0 = Math.floor(x0/T), ty0 = Math.floor(y0/T), tx1 = Math.min(Z.w-1, Math.ceil((x0+w0)/T)), ty1 = Math.min(Z.h-1, Math.ceil((y0+h0)/T));
+  cx.strokeStyle = 'rgba(255,255,255,.16)'; cx.lineWidth = 1.5; cx.beginPath();
+  for (let j=ty0;j<=ty1;j++) for (let i=tx0;i<=tx1;i++){ if (Z.t[j*Z.w+i] !== TL.W || (i*7+j*13)%3) continue; const ox = Math.sin(time*1.3 + i*1.7 + j)*6; cx.moveTo(i*T + 6 + ox, j*T + 14); cx.quadraticCurveTo(i*T + 12 + ox, j*T + 10, i*T + 18 + ox, j*T + 14); }
+  cx.stroke();
+  /* sporen op de grond */
+  for (const d of decals){ if (d.arrow !== undefined){ cx.strokeStyle = '#4a3020'; cx.lineWidth = 1.4; cx.beginPath(); cx.moveTo(d.x, d.y); cx.lineTo(d.x + Math.cos(d.arrow)*9, d.y + Math.sin(d.arrow)*9); cx.stroke(); continue; } cx.fillStyle = `rgba(110,14,20,${d.a})`; cx.beginPath(); cx.ellipse(d.x, d.y, d.r, d.r*.6, 0, 0, 7); cx.fill(); }
+  /* vuur */
+  for (const f of fires){ const fl = .8 + Math.sin(time*9 + f.x)*.12; const gr = cx.createRadialGradient(f.x, f.y, 4, f.x, f.y, f.r*1.6); gr.addColorStop(0, `rgba(255,190,80,${.55*fl})`); gr.addColorStop(1, 'rgba(255,90,20,0)'); cx.fillStyle = gr; cx.beginPath(); cx.arc(f.x, f.y, f.r*1.6, 0, 7); cx.fill();
+    for (let k=0;k<5;k++){ const a = k/5*6.28 + time*.7, rx = f.x + Math.cos(a)*f.r*.35, ry = f.y + Math.sin(a)*f.r*.25, h = 14 + Math.sin(time*12 + k*2)*5; cx.fillStyle = k%2 ? '#EE7D22' : '#ffd76a'; cx.beginPath(); cx.moveTo(rx - 6, ry); cx.quadraticCurveTo(rx, ry - h*1.6, rx + 6, ry); cx.fill(); } }
+  /* zichtvelden van wachters */
+  for (const e of ents){ if (e.kind !== 'guard' || e.dead || e.state === 'hunt') continue; const sus = e.sus||0; cx.fillStyle = `rgba(230,17,73,${.1 + sus*.35})`; cx.beginPath(); cx.moveTo(e.x, e.y); cx.arc(e.x, e.y, 190, e.dir - .85, e.dir + .85); cx.closePath(); cx.fill(); }
+  /* pijlenregen-waarschuwing */
+  for (const r of rains){ if (r.done) continue; const k = 1 - r.t/r.t0; cx.strokeStyle = `rgba(230,17,73,${.4 + k*.5})`; cx.lineWidth = 3; cx.beginPath(); cx.arc(r.x, r.y, r.r, 0, 7); cx.stroke(); cx.fillStyle = `rgba(230,17,73,${k*.25})`; cx.beginPath(); cx.arc(r.x, r.y, r.r*k, 0, 7); cx.fill(); }
+  /* oprapen */
+  for (const p of pickups){ if (p.got) continue; const b = Math.sin(time*4)*2; cx.fillStyle = '#c4774a'; cx.beginPath(); cx.moveTo(p.x - 7, p.y + b); cx.lineTo(p.x + 5, p.y - 6 + b); cx.lineTo(p.x + 8, p.y + 4 + b); cx.lineTo(p.x - 2, p.y + 7 + b); cx.fill(); cx.fillStyle = `rgba(255,240,180,${.5 + Math.sin(time*6)*.4})`; cx.beginPath(); cx.arc(p.x + 4, p.y - 6 + b, 2.5, 0, 7); cx.fill(); }
+  /* uitkijkpunten: Glaux cirkelt erboven */
+  for (const v of Z.vps){ if ((st.vps||{})[v.id]) continue; const a = time*1.4; drawOwl(cx, v.x + Math.cos(a)*26, v.y - 40 + Math.sin(a)*10, time); }
+  /* wezens */
+  const list = ents.slice().sort((a,b) => (a.dead ? -1 : 0) - (b.dead ? -1 : 0) || a.y - b.y);
+  for (const e of list){
+    if (e.kind === 'ship'){ if (e.dead){ cx.globalAlpha = Math.max(0, 1 - (e.sink||0)/4); drawShip(cx, e.x, e.y, e.a + (e.sink||0)*.2, '#2a2a2a', '#555', 0, 1 - (e.sink||0)*.12, true); cx.globalAlpha = 1; continue; }
+      drawShip(cx, e.x, e.y, e.a, e.hull, e.deck, e.oarT, 1, true, e.flash > 0); if (e !== P && e.hp < e.maxhp){ cx.fillStyle = 'rgba(0,0,0,.5)'; cx.fillRect(e.x - 18, e.y - 34, 36, 5); cx.fillStyle = e.team === 'g' ? '#94C021' : '#E61149'; cx.fillRect(e.x - 18, e.y - 34, 36*e.hp/e.maxhp, 5); }
+      if (e === P){ cx.strokeStyle = 'rgba(255,210,74,.7)'; cx.lineWidth = 2; cx.beginPath(); cx.arc(e.x, e.y, 70, 0, 7); cx.stroke(); } continue; }
+    if (e.dead && e.fade !== undefined && e.fade <= 0) continue;
+    if (e.owl){ drawOwl(cx, e.x, e.y - 6, time); }
+    else drawHuman(cx, e, time);
+    if (!e.dead && e.kind === 'guard' && (e.sus||0) > .05 && e.state !== 'hunt'){ cx.fillStyle = '#ffd24a'; cx.font = 'bold 16px Nunito, sans-serif'; cx.textAlign = 'center'; cx.fillText('?', e.x, e.y - 26); cx.fillStyle = 'rgba(0,0,0,.5)'; cx.fillRect(e.x - 10, e.y - 22, 20, 3); cx.fillStyle = '#E61149'; cx.fillRect(e.x - 10, e.y - 22, 20*e.sus, 3); }
+    if (!e.dead && e.kind === 'guard' && e.state === 'hunt'){ cx.fillStyle = '#E61149'; cx.font = 'bold 18px Nunito, sans-serif'; cx.textAlign = 'center'; cx.fillText('!', e.x, e.y - 26); }
+    if (!e.dead && e.windup > 0){ cx.strokeStyle = 'rgba(230,17,73,.8)'; cx.lineWidth = 2; cx.beginPath(); cx.arc(e.x, e.y, 15, 0, 7); cx.stroke(); }
+    if (!e.dead && e.quest){ const b = Math.sin(time*4)*3; cx.fillStyle = '#ffd24a'; cx.strokeStyle = '#5a3a00'; cx.lineWidth = 2; cx.font = 'bold 20px Nunito, sans-serif'; cx.textAlign = 'center'; cx.strokeText('!', e.x, e.y - 30 + b); cx.fillText('!', e.x, e.y - 30 + b); }
+  }
+  /* pijlen */
+  cx.strokeStyle = '#2a1d14'; cx.lineWidth = 1.6; for (const p of projs){ const a = Math.atan2(p.vy, p.vx); cx.beginPath(); cx.moveTo(p.x, p.y); cx.lineTo(p.x - Math.cos(a)*12, p.y - Math.sin(a)*12); cx.stroke(); }
+  /* deeltjes */
+  for (const p of parts){ const k = 1 - p.life/p.max; if (p.type === 'smoke'){ cx.fillStyle = p.c + (k*.35) + ')'; cx.beginPath(); cx.arc(p.x, p.y, p.s*(1.6 - k*.6), 0, 7); cx.fill(); } else { cx.globalAlpha = Math.max(0, k); cx.fillStyle = p.c; cx.fillRect(p.x - p.s/2, p.y - p.s/2, p.s, p.s); cx.globalAlpha = 1; } }
+  /* markering */
+  const mk = markerPos(); if (mk){ const b = Math.sin(time*4)*4; const isEnt = G.marker.look || G.marker.kind; const yy = mk.y - (isEnt ? 44 : 20) + b; cx.fillStyle = '#ffd24a'; cx.strokeStyle = '#6a4a00'; cx.lineWidth = 2; cx.beginPath(); cx.moveTo(mk.x, yy - 9); cx.lineTo(mk.x + 7, yy); cx.lineTo(mk.x, yy + 9); cx.lineTo(mk.x - 7, yy); cx.closePath(); cx.fill(); cx.stroke(); if (!isEnt){ cx.strokeStyle = 'rgba(255,210,74,.6)'; cx.beginPath(); cx.ellipse(mk.x, mk.y, 22 + b, 10 + b/2, 0, 0, 7); cx.stroke(); } }
+  /* schermlagen */
+  cx.setTransform(1,0,0,1,0,0);
+  if (Z.tint === 'brand'){ cx.fillStyle = 'rgba(120,40,10,.18)'; cx.fillRect(0,0,VW,VH); }
+  if (Z.tint === 'avond'){ cx.fillStyle = 'rgba(240,140,60,.12)'; cx.fillRect(0,0,VW,VH); }
+  if (Z.tint === 'goud'){ cx.fillStyle = 'rgba(255,220,120,.07)'; cx.fillRect(0,0,VW,VH); }
+  if (Z.tint === 'rook'){ cx.fillStyle = 'rgba(90,70,50,.14)'; cx.fillRect(0,0,VW,VH); }
+  if (Z.tint === 'grijs'){ cx.globalCompositeOperation = 'saturation'; cx.fillStyle = 'rgba(128,128,128,.55)'; cx.fillRect(0,0,VW,VH); cx.globalCompositeOperation = 'source-over'; cx.fillStyle = 'rgba(40,50,60,.12)'; cx.fillRect(0,0,VW,VH); }
+  cx.drawImage(vignette, 0, 0);
+  if (P && P.hp/P.maxhp < .35 && !G.naval){ cx.fillStyle = `rgba(160,0,20,${.15 + Math.sin(time*5)*.08})`; cx.fillRect(0,0,VW,VH); }
+  if (hurtFlash > 0){ cx.fillStyle = `rgba(200,0,20,${hurtFlash*.6})`; cx.fillRect(0,0,VW,VH); }
+  if (G.mode === 'vp'){ cx.fillStyle = 'rgba(0,0,0,.25)'; cx.fillRect(0,0,VW,50); cx.fillRect(0,VH-50,VW,50); }
+  /* pijl naar markering buiten beeld */
+  if (mk && G.mode === 'play'){ const sxp = (mk.x - cam.x)*ZOOM, syp = (mk.y - cam.y)*ZOOM; if (sxp < 30 || syp < 30 || sxp > VW-30 || syp > VH-30){ const a = Math.atan2(syp - VH/2, sxp - VW/2); const ex = VW/2 + Math.cos(a)*(VW/2 - 40), ey = VH/2 + Math.sin(a)*(VH/2 - 40); cx.save(); cx.translate(clamp(ex, 30, VW-30), clamp(ey, 70, VH-30)); cx.rotate(a); cx.fillStyle = '#ffd24a'; cx.strokeStyle = '#6a4a00'; cx.lineWidth = 2; cx.beginPath(); cx.moveTo(16, 0); cx.lineTo(-8, 11); cx.lineTo(-3, 0); cx.lineTo(-8, -11); cx.closePath(); cx.fill(); cx.stroke(); cx.restore(); } }
+}
+
+/* ---------- lus ---------- */
+let last = performance.now();
+function loop(now){
+  const dt = Math.min(.05, (now - last)/1000); last = now; time += dt;
+  if (Z && P){
+    ZOOM = lerp(ZOOM, zoomTarget, .06);
+    if (G.mode === 'play'){
+      st.playT = (st.playT||0) + dt;
+      if (G.naval) updateNaval(dt);
+      else {
+        if (!P.dead) updatePlayer(dt);
+        for (const e of ents){ if (e === P) continue; e.cd = Math.max(0, e.cd - dt); updateAI(e, dt); }
+        /* uit elkaar duwen */
+        for (let i=0;i<ents.length;i++){ const a = ents[i]; if (a.dead) continue; for (let j=i+1;j<ents.length;j++){ const b = ents[j]; if (b.dead) continue; const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy), m = (a.r + b.r)*.85; if (d > 0 && d < m){ const push = (m - d)/2, ux = dx/d, uy = dy/d; if (a !== P || !b.follow) moveEnt(a, -ux*push, -uy*push); moveEnt(b, ux*push, uy*push); } } }
+        updateProjs(dt); updateBattle(dt);
+        const s = STEPS[st.step]; if (s && s.update && !G.advancing) s.update.call(s, dt);
+        battleDrums(dt, G.battle);
+      }
+      for (const e of ents){ e.flash = Math.max(0, (e.flash||0) - dt); e.atkT = Math.max(0, (e.atkT||0) - dt); e.invul = Math.max(0, (e.invul||0) - dt); }
+      P.cd = Math.max(0, P.cd - dt);
+      if (Math.random() < .2) revealAround(P.x, P.y, G.naval ? 16 : 10);
+      if (Z.tint === 'brand' && Math.random() < dt*4) puff(cam.x + rnd(0, VW/ZOOM), cam.y + VH/ZOOM, 'ember', 1);
+    }
+    if (G.mode === 'vp' && G.vpAnim){ G.vpAnim.t += dt; }
+    for (const p of parts){ p.life += dt; p.x += p.vx*dt; p.y += p.vy*dt; p.vy += (p.g||0)*dt; p.vx *= .97; }
+    parts = parts.filter(p => p.life < p.max);
+    for (const d of decals) if (d.a > .3 && d.arrow === undefined) d.a -= dt*.01;
+    shake = Math.max(0, shake - dt*30); hurtFlash = Math.max(0, hurtFlash - dt);
+    render(); updateHUD();
+  }
+  for (const k in pressed) delete pressed[k];
+  requestAnimationFrame(loop);
+}
+
+/* ---------- start ---------- */
+function showStart(){
+  const busy = st.naam && (st.step > 0 || Object.keys(st.log).length);
+  const box = $('#start'); box.querySelector('.sbody').innerHTML = `<div class="logo2">POLIS</div><div class="sub2">Schaduw van Hellas</div>
+    <p>Beleef zes herinneringen uit het oude Griekenland: de democratie van Athene, de strenge stad Sparta, de Perzische Oorlogen en de dag dat de Griekse poleis hun vrijheid verloren. Je loopt vrij rond, je vecht, je sluipt en je vaart. Elke vraag verwijst naar je leerwerkboek (Les 4 en 5).</p>
+    <div class="sporen"><span class="sp sp-b">Basis</span> alle hoofdmissies <span class="sp sp-r">Hulp</span> tips van Glaux met paginaverwijzing <span class="sp sp-v">V+</span> zijpaden voor wie meer wil</div>
+    <p class="small">Speelduur ongeveer 50 minuten. Je voortgang wordt automatisch bewaard, je kan dus ook over twee lessen spelen. Zet je geluid aan!</p>
+    <div class="form"><label>Voornaam en naam<input id="fnaam" maxlength="40" value="${esc(st.naam||'')}" placeholder="bv. Lotte Peeters"></label><label>Klas<select id="fklas">${['','2Ag','2Ah','2Ai','andere'].map(k => `<option ${st.klas===k?'selected':''} value="${k}">${k||'kies je klas'}</option>`).join('')}</select></label></div>
+    <div class="qrow">${busy ? `<button class="btn" id="sCont">Verder spelen: ${ACTS[st.act||0].kop} ${ICO.arrow}</button>` : ''}<button class="btn ${busy?'alt':''}" id="sNew">${busy ? 'Opnieuw beginnen' : 'Start'} ${busy?'':ICO.arrow}</button></div><div id="sfb"></div>`;
+  box.classList.add('open');
+  $('#sNew').onclick = () => { const n = $('#fnaam').value.trim(), k = $('#fklas').value; if (n.length < 3 || !k){ $('#sfb').className = 'fb no'; $('#sfb').textContent = 'Vul je naam en klas in, zodat je leerkracht weet van wie het verslag is.'; return; }
+    if (busy && !confirm('Wil je echt opnieuw beginnen? Je score en voortgang worden gewist.')) return; st = fresh(); st.naam = n; st.klas = k; save(); begin(); };
+  if (busy) $('#sCont').onclick = () => begin(true);
+}
+function begin(resume){ ac(); $('#start').classList.remove('open'); $('#hud').classList.add('on'); G.mode = 'play'; Z = null; startStep(st.step || 0, false); }
+
+function init(){
+  makeVignette(); initTouch();
+  $('#jBtn').onclick = () => openJournal(); $('#jClose').onclick = closeJournal;
+  $('#sBtn').onclick = () => { muted = !muted; $('#sBtn').innerHTML = muted ? ICO.mute : ICO.sound; }; $('#sBtn').innerHTML = ICO.sound;
+  $('#mBtn').onclick = () => { if (confirm('Terug naar het startscherm? Je voortgang blijft bewaard.')){ G.mode = 'start'; ['#dlg','#quiz','#cut','#journal','#end','#desync'].forEach(s => $(s).classList.remove('open')); $('#hud').classList.remove('on'); showStart(); } };
+  addEventListener('keydown', e => {
+    if (e.code === 'Tab'){ e.preventDefault(); if ($('#journal').classList.contains('open')) closeJournal(); else if (G.mode === 'play') openJournal(); }
+    if (e.code === 'Escape' && $('#journal').classList.contains('open')) closeJournal();
+    if ((e.code === 'KeyE' || e.code === 'Enter') && $('#dlg').classList.contains('open') && dlgQueue && !e.repeat){ e.preventDefault(); delete pressed[e.code]; dlgQueue.adv(); setTimeout(() => { delete pressed.KeyE; }, 0); }
+    if ((e.code === 'Enter') && $('#cut').classList.contains('open') && !e.repeat){ const b = $('#cnext'); if (b) b.click(); }
+  });
+  showStart(); requestAnimationFrame(loop);
+}
+window.addEventListener('DOMContentLoaded', init);
+
+document.getElementById('drico').innerHTML = ICO.coin;
+</script>
+</body>
+</html>
